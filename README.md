@@ -4,6 +4,12 @@
 
 # Laravel Post Deploy Hooks
 
+> [!NOTE]
+> This is an independent, community package. It is not an official or
+> first-party Laravel package, and is not affiliated with, endorsed by, or
+> sponsored by Laravel or Laravel Cloud. "Laravel" is a trademark of its
+> respective owner.
+
 Run a queued job once a worker has loaded your new release. Useful for tasks
 such as generating a sitemap or refreshing cached data after deployment.
 
@@ -285,6 +291,3 @@ This runs the checks and creates a GitHub release. The GitHub CLI must be signed
 ## Credits and license
 
 Created by [Mathias Grimm](https://github.com/mathiasgrimm). [MIT license](LICENSE.md).
-
-An independent community package, not affiliated with or endorsed by Laravel or
-Laravel Cloud. Laravel is a trademark of its respective owner.

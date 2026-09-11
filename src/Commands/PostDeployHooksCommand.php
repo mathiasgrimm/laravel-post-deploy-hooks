@@ -5,7 +5,6 @@ namespace MathiasGrimm\PostDeployHooks\Commands;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
-use ReflectionClass;
 
 class PostDeployHooksCommand extends Command
 {
@@ -31,7 +30,7 @@ class PostDeployHooksCommand extends Command
             return self::FAILURE;
         }
 
-        $options->hookClass::dispatch(
+        PostDeployHooks::dispatch(
             $options->version,
             $options->job,
             $options->expires,
@@ -47,9 +46,6 @@ class PostDeployHooksCommand extends Command
 
     private function validatedOptions(): PostDeployHooksOptions
     {
-        $hookClass = config('post-deploy-hooks.job.class', PostDeployHooks::class);
-        $this->ensureHookClassIsValid($hookClass);
-
         $version = $this->option('deploy-version');
         $job = $this->option('job');
         $expires = $this->option('expires')
@@ -67,7 +63,6 @@ class PostDeployHooksCommand extends Command
         $this->ensureQueueIsValid($queue);
 
         return new PostDeployHooksOptions(
-            hookClass: $hookClass,
             version: $version,
             job: $job,
             expires: $expires,
@@ -75,14 +70,6 @@ class PostDeployHooksCommand extends Command
             connection: $connection,
             queue: $queue,
         );
-    }
-
-    private function ensureHookClassIsValid(mixed $hookClass): void
-    {
-        if (! is_string($hookClass) || ! is_a($hookClass, PostDeployHooks::class, true)
-            || ! (new ReflectionClass($hookClass))->isInstantiable()) {
-            throw new InvalidArgumentException('post-deploy-hooks.job.class must be PostDeployHooks or a class that extends it and can be created.');
-        }
     }
 
     private function ensureVersionIsValid(mixed $version): void

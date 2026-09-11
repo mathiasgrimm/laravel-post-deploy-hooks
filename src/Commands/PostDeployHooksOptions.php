@@ -8,7 +8,6 @@ final readonly class PostDeployHooksOptions
      * @param  array<string, string>  $arguments
      */
     public function __construct(
-        public string $hookClass,
         public string $version,
         public string $job,
         public int $expires,

@@ -1,7 +1,5 @@
 <?php
 
-use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
-
 return [
     /*
     |--------------------------------------------------------------------------
@@ -25,19 +23,6 @@ return [
     */
 
     'job' => [
-        /*
-        |--------------------------------------------------------------------------
-        | Job Class
-        |--------------------------------------------------------------------------
-        |
-        | The hook job that waits for the right version before sending your job.
-        | To customize it, use a class that extends PostDeployHooks and keeps
-        | the same constructor arguments.
-        |
-        */
-
-        'class' => PostDeployHooks::class,
-
         /*
         |--------------------------------------------------------------------------
         | Queue Connection

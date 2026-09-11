@@ -4,7 +4,6 @@ use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Support\Facades\DB;
 use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
-use MathiasGrimm\PostDeployHooks\Tests\Fixtures\CustomPostDeployHooks;
 use MathiasGrimm\PostDeployHooks\Tests\Fixtures\FailureHandler;
 use MathiasGrimm\PostDeployHooks\Tests\Fixtures\GenerateSitemap;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -145,35 +144,3 @@ it('uses configured routing unless explicitly overridden', function (bool $fromC
     expect($target->queue)->toBe('sitemaps');
     expect(json_decode($target->payload, true)['displayName'])->toBe(GenerateSitemap::class);
 })->with([true, false])->with([true, false]);
-
-it('dispatches the configured hook class with its options and routing', function () {
-    config([
-        'post-deploy-hooks.job.class' => CustomPostDeployHooks::class,
-        'post-deploy-hooks.job.queue' => 'hooks',
-    ]);
-
-    $this->artisan('post-deploy-hooks', [
-        '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
-        '--expires' => '45', '--with' => ['siteId=123'],
-    ])->assertSuccessful();
-
-    $row = DB::table('jobs')->sole();
-    $hook = unserialize(json_decode($row->payload, true)['data']['command']);
-    expect($hook)->toBeInstanceOf(CustomPostDeployHooks::class)
-        ->version->toBe('release-b')
-        ->jobClass->toBe(GenerateSitemap::class)
-        ->expires->toBe(45)
-        ->arguments->toBe(['siteId' => '123']);
-    expect($row->queue)->toBe('hooks');
-});
-
-it('rejects an invalid configured hook class before enqueueing', function (mixed $class) {
-    config(['post-deploy-hooks.job.class' => $class]);
-
-    $this->artisan('post-deploy-hooks', [
-        '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
-    ])->expectsOutput('post-deploy-hooks.job.class must be PostDeployHooks or a class that extends it and can be created.')
-        ->assertFailed();
-
-    expect(DB::table('jobs')->count())->toBe(0);
-})->with([null, '', 'App\\Jobs\\MissingHook', stdClass::class, GenerateSitemap::class]);

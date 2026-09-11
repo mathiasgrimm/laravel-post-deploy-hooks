@@ -21,7 +21,7 @@ class PostDeployHookCommand extends Command
     {
         $version = $this->option('deploy-version');
         $job = $this->option('job');
-        $expires = filter_var($this->option('expires') ?? config('post-deploy-hook.expires', 30), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        $expires = filter_var($this->option('expires') ?? config('post-deploy-hook.job.expire', 30), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 
         if (! is_string($version) || trim($version) === ''
             || ! is_string($job) || trim($job) === '' || $expires === false) {

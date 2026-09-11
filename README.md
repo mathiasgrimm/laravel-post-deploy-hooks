@@ -176,13 +176,15 @@ semantics. The wrapper's expiry does not limit the target's runtime or retries.
 ```php
 return [
     'version' => env('POST_DEPLOY_HOOK_VERSION'),
-    'expires' => 30,  // Minutes.
-    'backoff' => 60,  // Seconds between attempts.
+    'job' => [
+        'expire' => 30,  // Minutes.
+        'backoff' => 60, // Seconds between attempts.
+    ],
     'on_failure' => null,
 ];
 ```
 
-`expires` and `backoff` must be positive integers. `--expires` overrides the
+`job.expire` and `job.backoff` must be positive integers. `--expires` overrides the
 configured expiry for one hook. Each wrapper captures these settings when it is
 created; a later config change does not reset an existing wrapper's deadline.
 

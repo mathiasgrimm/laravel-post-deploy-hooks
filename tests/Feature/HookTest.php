@@ -56,9 +56,9 @@ it('preserves the deadline across serialization and elapsed time', function () {
 
 it('uses configured backoff for mismatch and captures it in the queue payload', function () {
     $this->freezeSecond();
-    config(['post-deploy-hook.backoff' => 15, 'post-deploy-hook.version' => 'release-a']);
+    config(['post-deploy-hook.job.backoff' => 15, 'post-deploy-hook.version' => 'release-a']);
     PostDeployHook::dispatch('release-b', GenerateSitemap::class);
-    config(['post-deploy-hook.backoff' => 99]);
+    config(['post-deploy-hook.job.backoff' => 99]);
     $this->work();
     $row = DB::table('jobs')->sole();
     expect($row->available_at)->toBe(now()->addSeconds(15)->timestamp);

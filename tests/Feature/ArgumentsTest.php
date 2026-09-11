@@ -44,7 +44,7 @@ it('retains arguments through retries for the failure callback', function () {
 
 it('uses the configured expiry for command and direct construction while allowing overrides', function () {
     $this->freezeSecond();
-    config(['post-deploy-hook.expires' => 45]);
+    config(['post-deploy-hook.job.expire' => 45]);
     $hook = new PostDeployHook('release-b', GenerateSitemap::class);
     expect($hook->expires)->toBe(45);
     expect($hook->retryUntil()->timestamp)->toBe(now()->addMinutes(45)->timestamp);
@@ -57,7 +57,7 @@ it('uses the configured expiry for command and direct construction while allowin
     expect(unserialize($payload['data']['command'])->expires)->toBe(45);
     expect($payload['maxTries'])->toBe(0);
 
-    config(['post-deploy-hook.expires' => 5]);
+    config(['post-deploy-hook.job.expire' => 5]);
     expect(unserialize($payload['data']['command'])->retryUntil()->timestamp)->toBe(now()->addMinutes(45)->timestamp);
 });
 

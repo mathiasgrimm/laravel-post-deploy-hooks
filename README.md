@@ -204,7 +204,7 @@ class ReportFailedHook implements HandlesFailedHooks
 
 This handles hooks that expire or fail to send your job. Failures inside your
 job belong in its own `failed()` method. Errors in the handler are reported but
-not retried. Run the command again to start a new waiting period for an expired hook.
+not retried.
 
 ## Things to know
 

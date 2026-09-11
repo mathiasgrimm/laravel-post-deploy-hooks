@@ -89,9 +89,10 @@ php artisan post-deploy-hooks \
 
 ### Deployment timeline
 
-The deployment as a sequence:
-
 ```mermaid
+---
+title: Deployment sequence
+---
 sequenceDiagram
     autonumber
     participant Cloud as Laravel Cloud
@@ -117,9 +118,10 @@ sequenceDiagram
     end
 ```
 
-The same deployment as a linear flow:
-
 ```mermaid
+---
+title: Linear deployment flow
+---
 %%{init: {"flowchart": {"curve": "basis", "padding": 24, "nodeSpacing": 32, "rankSpacing": 42}, "themeVariables": {"fontFamily": "system-ui, sans-serif", "fontSize": "14px", "lineColor": "#64748b", "edgeLabelBackground": "#ffffff"}}}%%
 flowchart TB
     A("1. Current release<br><b>v1.0.0</b> · abc1234"):::current

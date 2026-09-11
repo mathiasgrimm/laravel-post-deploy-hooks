@@ -98,11 +98,28 @@ php artisan post-deploy-hooks \
 | `--connection` | No | Queue connection for the hook, e.g. `redis`. |
 | `--queue` | No | Queue name for the hook, e.g. `deployments`. |
 
-Argument names must match your job's constructor. For
-`__construct(string $siteId, string $locale)`, use:
+Argument names must match your job's constructor:
+
+```php
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class GenerateSitemap implements ShouldQueue
+{
+    public function __construct(
+        public string $siteId,
+        public string $locale,
+    ) {}
+}
+```
+
+Pass those arguments by name:
 
 ```bash
---with='siteId=123' --with='locale=en'
+php artisan post-deploy-hooks \
+  --deploy-version=release-123 \
+  --job='App\Jobs\GenerateSitemap' \
+  --with='siteId=123' \
+  --with='locale=en'
 ```
 
 Numbers and booleans are passed as strings too. Missing required arguments,

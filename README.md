@@ -90,6 +90,28 @@ php artisan post-deploy-hooks \
 ### Deployment timeline
 
 ```mermaid
+sequenceDiagram
+    participant Cloud as Laravel Cloud
+    participant Build as Build commands
+    participant Deploy as Deploy commands
+    participant Queue
+    participant Old as Worker on v1.0.0 (abc1234)
+    participant New as Worker on v1.1.0 (def5678)
+
+    Note over Cloud,Old: v1.0.0 (abc1234) is currently deployed
+    Cloud->>Build: Set version to v1.1.0 (def5678)
+    Cloud->>Deploy: Run post-deploy-hooks
+    Deploy->>Queue: Queue hook for v1.1.0 (def5678)
+    Queue->>Old: Try hook
+    Old-->>Queue: Version does not match, try again later
+    Cloud->>New: Deploy v1.1.0 (def5678)
+    Queue->>New: Try hook again
+    New->>Queue: Send GenerateSitemap
+```
+
+The same deployment as a linear flow:
+
+```mermaid
 %%{init: {"flowchart": {"curve": "basis", "nodeSpacing": 28, "rankSpacing": 36}, "themeVariables": {"fontFamily": "system-ui, sans-serif", "fontSize": "14px", "lineColor": "#64748b", "edgeLabelBackground": "#ffffff"}}}%%
 flowchart LR
     A("1. Current release<br><b>v1.0.0</b> · abc1234"):::current

@@ -83,7 +83,7 @@ php artisan post-deploy-hooks \
 
 php artisan post-deploy-hooks \
   --deploy-version="$LARAVEL_CLOUD_COMMIT" \
-  --job='App\Jobs\WarmCache'
+  --job='App\Jobs\BustCloudflareCache'
 ```
 
 ### Deployment timeline

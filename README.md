@@ -92,14 +92,14 @@ php artisan post-deploy-hooks \
 
 ## Options
 
-| Option | Purpose |
-| --- | --- |
-| `--deploy-version` | The version to wait for. Required. |
-| `--job` | The job class to send to the queue. Required. |
-| `--expires=60` | How many minutes the hook can wait. |
-| `--with='siteId=123'` | A constructor argument. Repeat for more arguments. Values are strings. |
-| `--connection=redis` | Queue connection for the hook. |
-| `--queue=deployments` | Queue name for the hook. |
+| Option | Required | Purpose |
+| --- | --- | --- |
+| `--deploy-version` | Yes | The version to wait for. |
+| `--job` | Yes | The job class to send to the queue. |
+| `--expires=60` | No | How many minutes the hook can wait. |
+| `--with='siteId=123'` | Only if your job requires constructor arguments | A constructor argument. Repeat for more arguments. Values are strings. |
+| `--connection=redis` | No | Queue connection for the hook. |
+| `--queue=deployments` | No | Queue name for the hook. |
 
 Argument names must match your job's constructor. For example, use
 `--with='siteId=123' --with='locale=en'` for `__construct(string $siteId, string $locale)`.

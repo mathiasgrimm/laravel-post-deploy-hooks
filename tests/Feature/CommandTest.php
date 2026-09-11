@@ -1,8 +1,10 @@
 <?php
 
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Support\Facades\DB;
 use MathiasGrimm\PostDeployHook\Jobs\PostDeployHook;
+use MathiasGrimm\PostDeployHook\Tests\Fixtures\FailureHandler;
 use MathiasGrimm\PostDeployHook\Tests\Fixtures\GenerateSitemap;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -45,15 +47,70 @@ it('rejects invalid command input without enqueueing', function (array $options)
 })->with([
     [['--deploy-version' => '']], [['--job' => ' ']], [['--expires' => '0']],
     [['--expires' => '-1']], [['--expires' => '1.5']], [['--expires' => 'abc']],
-    [['--expires' => '999999999999999999999']], [['--connection' => 'missing']],
+    [['--expires' => '999999999999999999999']],
     [['--queue' => '']],
 ]);
 
-it('rejects connections that cannot durably release the wrapper', function (string $driver) {
-    config(['queue.connections.unsafe' => ['driver' => $driver]]);
+it('allows sync and immediately dispatches the target when the version matches', function () {
+    config(['queue.connections.immediate' => ['driver' => 'sync']]);
     $this->artisan('post-deploy-hook', [
         '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
-        '--connection' => 'unsafe',
-    ])->assertFailed();
+        '--connection' => 'immediate',
+    ])->assertSuccessful();
+    $payload = json_decode(DB::table('jobs')->sole()->payload, true);
+    expect($payload['displayName'])->toBe(GenerateSitemap::class);
+});
+
+it('cannot retry or expire a version mismatch on sync', function () {
+    $handler = new FailureHandler;
+    app()->instance(FailureHandler::class, $handler);
+    config([
+        'queue.connections.immediate' => ['driver' => 'sync'],
+        'post-deploy-hook.job.failure_handler' => FailureHandler::class,
+        'post-deploy-hook.version' => 'release-a',
+    ]);
+    $this->artisan('post-deploy-hook', [
+        '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
+        '--connection' => 'immediate', '--expires' => 1,
+    ])->assertSuccessful();
+    $this->travel(2)->minutes();
+    $this->work();
     expect(DB::table('jobs')->count())->toBe(0);
-})->with(['sync', 'null', 'deferred', 'background', 'failover']);
+    expect($handler->calls)->toBeEmpty();
+});
+
+it('allows the null driver', function () {
+    config(['queue.connections.discard' => ['driver' => 'null']]);
+    $this->artisan('post-deploy-hook', [
+        '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
+        '--connection' => 'discard',
+    ])->assertSuccessful();
+    expect(DB::table('jobs')->count())->toBe(0);
+});
+
+it('allows failover to a persistent connection', function () {
+    config(['queue.connections.fallback' => [
+        'driver' => 'failover', 'connections' => ['missing', 'database'],
+    ]]);
+    $this->artisan('post-deploy-hook', [
+        '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
+        '--connection' => 'fallback',
+    ])->assertSuccessful();
+    expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(PostDeployHook::class);
+    $this->work();
+    expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(GenerateSitemap::class);
+});
+
+it('accepts a custom driver registered with Laravel', function () {
+    app('queue')->extend('custom-database', fn () => new DatabaseConnector(app('db')));
+    config(['queue.connections.custom' => array_merge(config('queue.connections.database'), [
+        'driver' => 'custom-database',
+    ])]);
+    $this->artisan('post-deploy-hook', [
+        '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
+        '--connection' => 'custom',
+    ])->assertSuccessful();
+    expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(PostDeployHook::class);
+    $this->work();
+    expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(GenerateSitemap::class);
+});

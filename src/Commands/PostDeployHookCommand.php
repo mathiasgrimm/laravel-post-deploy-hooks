@@ -31,15 +31,6 @@ class PostDeployHookCommand extends Command
         }
 
         $connection = $this->option('connection') ?? config('queue.default');
-        $connections = config('queue.connections', []);
-        $driver = is_string($connection) ? ($connections[$connection]['driver'] ?? null) : null;
-
-        if (! in_array($driver, ['database', 'redis', 'sqs', 'beanstalkd'], true)) {
-            $this->error('Use a persistent queue connection with the database, redis, sqs, or beanstalkd driver.');
-
-            return self::FAILURE;
-        }
-
         $queue = $this->option('queue');
 
         if ($queue !== null && trim($queue) === '') {

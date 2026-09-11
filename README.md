@@ -26,16 +26,27 @@ php artisan post-deploy-hook \
 ## Requirements
 
 - PHP 8.2+ with Laravel 12, or PHP 8.3+ with Laravel 13.
-- A shared, persistent queue using the `database`, `redis`, `sqs`, or `beanstalkd` driver.
-- Running queue workers that load the version belonging to their own release.
+- A Laravel queue connection.
+- For delayed retries: a shared, persistent queue and running workers that load
+  the version belonging to their own release.
 
-The command rejects `sync`, `null`, `deferred`, `background`, `failover`, and custom
-drivers. The wrapper needs durable delayed redelivery; choose a supported concrete
-connection. Install any dependencies required by your chosen Laravel queue driver.
+The command accepts any configured driver, including custom drivers and `failover`,
+and leaves connection resolution to Laravel. To wait for a new release, the driver
+must support durable delayed redelivery through `release()`. Laravel's `database`,
+`redis`, `sqs`, and `beanstalkd` drivers provide this behavior. Custom and failover
+connections depend on the underlying implementation. Install any dependencies
+required by your chosen driver.
+
+With `sync`, the wrapper runs immediately in the command's process. A matching
+version dispatches the target immediately; a mismatch returns without retrying,
+and no later expiry callback runs. Exceptions also fail immediately rather than
+retrying until the deadline. `deferred` and `background` likewise do not provide
+durable delayed retries, while `null` discards the job. These drivers are allowed,
+but cannot provide the wait-for-release behavior.
 
 For an existing database queue, check the capacity of `jobs.attempts` before using
 a short backoff or long expiry. Older MySQL schemas may use an unsigned tiny
-integer, limited to 255 attempts. Widen that column or use another supported
+integer, limited to 255 attempts. Widen that column or use another persistent
 driver if your retry window can exceed its capacity.
 
 ## Installation
@@ -201,8 +212,7 @@ PostDeployHook::dispatch(
 ```
 
 Omitting `expires`, or passing `null`, uses the configured default. Direct PHP
-dispatch must also use a persistent connection; the CLI's driver validation
-does not run for direct dispatch.
+dispatch has the same driver-dependent retry behavior as the CLI.
 
 ## Failure callback
 

@@ -90,23 +90,26 @@ php artisan post-deploy-hooks \
 ### Deployment timeline
 
 ```mermaid
-sequenceDiagram
-    participant Cloud as Laravel Cloud
-    participant Build as Build commands
-    participant Deploy as Deploy commands
-    participant Queue
-    participant Old as Worker on v1.0.0 (abc1234)
-    participant New as Worker on v1.1.0 (def5678)
+flowchart LR
+    A["1. Current release<br><b>v1.0.0</b> · abc1234"]:::current
+    B["2. Build commands<br>Set version to<br><b>v1.1.0</b> · def5678"]:::action
+    C["3. Deploy commands<br>Queue hook for<br><b>v1.1.0</b> · def5678"]:::action
+    D["4. Old worker receives hook<br>Running: <b>v1.0.0</b> · abc1234<br>Expected: <b>v1.1.0</b> · def5678"]:::mismatch
+    E["5. Released back to the queue<br>Wait 60 seconds<br>Try again"]:::waiting
+    F["6. New worker receives hook<br>Running: <b>v1.1.0</b> · def5678<br>Expected: <b>v1.1.0</b> · def5678"]:::match
+    G["7. Job dispatched<br><b>GenerateSitemap</b>"]:::success
 
-    Note over Cloud,Old: v1.0.0 (abc1234) is currently deployed
-    Cloud->>Build: Set version to v1.1.0 (def5678)
-    Cloud->>Deploy: Run post-deploy-hooks
-    Deploy->>Queue: Queue hook for v1.1.0 (def5678)
-    Queue->>Old: Try hook
-    Old-->>Queue: Version does not match, try again later
-    Cloud->>New: Deploy v1.1.0 (def5678)
-    Queue->>New: Try hook again
-    New->>Queue: Send GenerateSitemap
+    A --> B --> C --> D
+    D -->|Version does not match| E
+    E --> F
+    F -->|Version matches| G
+
+    classDef current fill:#e8eef8,stroke:#64748b,color:#172033,stroke-width:1.5px
+    classDef action fill:#e8f1ff,stroke:#3b82f6,color:#172033,stroke-width:1.5px
+    classDef mismatch fill:#fff0ee,stroke:#e2574c,color:#172033,stroke-width:2px
+    classDef waiting fill:#fff7df,stroke:#d89a20,color:#172033,stroke-width:2px
+    classDef match fill:#e9f8ef,stroke:#2d9d62,color:#172033,stroke-width:2px
+    classDef success fill:#dcfce7,stroke:#16803c,color:#172033,stroke-width:2.5px
 ```
 
 ## Options

@@ -284,8 +284,7 @@ This runs the checks and creates a GitHub release. The GitHub CLI must be signed
 
 ## Credits and license
 
-Created by [Mathias Grimm](https://github.com/mathiasgrimm). Artwork adapted from
-[Laravel Puff](https://github.com/mathiasgrimm/laravel-puff). [MIT license](LICENSE.md).
+Created by [Mathias Grimm](https://github.com/mathiasgrimm). [MIT license](LICENSE.md).
 
 An independent community package, not affiliated with or endorsed by Laravel or
 Laravel Cloud. Laravel is a trademark of its respective owner.

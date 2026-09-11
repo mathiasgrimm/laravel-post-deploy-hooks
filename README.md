@@ -123,8 +123,8 @@ php artisan post-deploy-hooks \
 ```
 
 Numbers and booleans are passed as strings too. Missing required arguments,
-unknown names, and duplicate names are rejected. Your job class is checked only
-on a worker running the matching version, so it can be new to that release.
+unknown names, and duplicate names are rejected. The job class is loaded only
+after the worker reaches the requested version.
 
 ## Configuration
 

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'version' => env('LARAVEL_POST_DEPLOY_HOOK_VERSION'),
+    'version' => env('POST_DEPLOY_HOOK_VERSION'),
 
     'expires' => 30,
 

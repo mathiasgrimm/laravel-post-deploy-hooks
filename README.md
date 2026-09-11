@@ -57,13 +57,13 @@ Install your failure handler in that initial deployment too.
 
 ## Set the release version
 
-Set `LARAVEL_POST_DEPLOY_HOOK_VERSION` separately for each release. For Laravel
+Set `POST_DEPLOY_HOOK_VERSION` separately for each release. For Laravel
 Cloud, add this to the release's build commands **before** `config:cache` or
 `optimize`:
 
 ```bash
 test -n "$LARAVEL_CLOUD_COMMIT_SHA" || exit 1
-echo "LARAVEL_POST_DEPLOY_HOOK_VERSION=$LARAVEL_CLOUD_COMMIT_SHA" >> .env
+echo "POST_DEPLOY_HOOK_VERSION=$LARAVEL_CLOUD_COMMIT_SHA" >> .env
 php artisan config:cache
 ```
 
@@ -175,7 +175,7 @@ semantics. The wrapper's expiry does not limit the target's runtime or retries.
 
 ```php
 return [
-    'version' => env('LARAVEL_POST_DEPLOY_HOOK_VERSION'),
+    'version' => env('POST_DEPLOY_HOOK_VERSION'),
     'expires' => 30,  // Minutes.
     'backoff' => 60,  // Seconds between attempts.
     'on_failure' => null,

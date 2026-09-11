@@ -48,17 +48,14 @@ class PostDeployHooksCommand extends Command
     {
         $version = $this->option('deploy-version');
         $job = $this->option('job');
-        $expires = $this->option('expires')
-            ?? config('post-deploy-hooks.job.expire');
+        $expires = $this->optionOfConfig('expires', 'job.expire');
 
         $this->ensureVersionIsValid($version);
         $this->ensureJobIsValid($job);
         $expires = $this->ensureExpiresIsValid($expires);
 
-        $connection = $this->option('connection')
-            ?? config('post-deploy-hooks.job.connection')
-            ?? config('queue.default');
-        $queue = $this->option('queue') ?? config('post-deploy-hooks.job.queue');
+        $connection = $this->optionOfConfig('connection', 'job.connection') ?? config('queue.default');
+        $queue = $this->optionOfConfig('queue', 'job.queue');
 
         $this->ensureQueueIsValid($queue);
 
@@ -70,6 +67,11 @@ class PostDeployHooksCommand extends Command
             connection: $connection,
             queue: $queue,
         );
+    }
+
+    private function optionOfConfig(string $option, string $config): mixed
+    {
+        return $this->option($option) ?? config("post-deploy-hooks.{$config}");
     }
 
     private function ensureVersionIsValid(mixed $version): void

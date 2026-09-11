@@ -98,8 +98,13 @@ php artisan post-deploy-hooks \
 | `--connection` | No | Queue connection for the hook, e.g. `redis`. |
 | `--queue` | No | Queue name for the hook, e.g. `deployments`. |
 
-Argument names must match your job's constructor. For example, use
-`--with='siteId=123' --with='locale=en'` for `__construct(string $siteId, string $locale)`.
+Argument names must match your job's constructor. For
+`__construct(string $siteId, string $locale)`, use:
+
+```bash
+--with='siteId=123' --with='locale=en'
+```
+
 Numbers and booleans are passed as strings too. Missing required arguments,
 unknown names, and duplicate names are rejected. Your job class is checked only
 on a worker running the matching version, so it can be new to that release.

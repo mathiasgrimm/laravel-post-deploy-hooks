@@ -90,31 +90,27 @@ php artisan post-deploy-hooks \
 ### Deployment timeline
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"fontFamily": "system-ui, sans-serif", "fontSize": "14px", "actorBkg": "#dbeafe", "actorBorder": "#3b82f6", "actorTextColor": "#172033", "signalColor": "#64748b", "signalTextColor": "#172033", "noteBkgColor": "#e2e8f0", "noteBorderColor": "#64748b", "noteTextColor": "#172033", "activationBkgColor": "#dcfce7", "activationBorderColor": "#2d9d62"}}}%%
 sequenceDiagram
     autonumber
     participant Cloud as Laravel Cloud
-    participant Build as Build commands
-    participant Deploy as Deploy commands
     participant Queue
     participant Old as Worker on v1.0.0 (abc1234)
     participant New as Worker on v1.1.0 (def5678)
 
-    Note over Cloud,Old: v1.0.0 (abc1234) is currently deployed
-    Cloud->>Build: Set version to v1.1.0 (def5678)
-    Cloud->>Deploy: Run post-deploy-hooks
-    Deploy->>Queue: Queue hook for v1.1.0 (def5678)
-    rect rgb(254, 226, 226)
+    Note over Cloud,Old: Current release: v1.0.0 (abc1234)
+    Note over Cloud: Build commands set v1.1.0 (def5678)
+    Cloud->>Queue: Deploy commands queue hook for v1.1.0 (def5678)
+    rect rgba(226, 62, 62, 0.15)
         Queue->>Old: Try hook
         activate Old
-        Old-->>Queue: Version does not match, try again later
+        Old-->>Queue: Running v1.0.0, release back to queue
         deactivate Old
     end
-    Cloud->>New: Deploy v1.1.0 (def5678)
-    rect rgb(220, 252, 231)
+    Note over Cloud,New: Laravel Cloud deploys v1.1.0 (def5678)
+    rect rgba(34, 197, 94, 0.15)
         Queue->>New: Try hook again
         activate New
-        New->>Queue: Send GenerateSitemap
+        New->>Queue: Version matches, send GenerateSitemap
         deactivate New
     end
 ```

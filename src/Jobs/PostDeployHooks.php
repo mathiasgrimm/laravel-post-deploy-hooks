@@ -1,6 +1,6 @@
 <?php
 
-namespace MathiasGrimm\PostDeployHook\Jobs;
+namespace MathiasGrimm\PostDeployHooks\Jobs;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
@@ -8,13 +8,13 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use InvalidArgumentException;
-use MathiasGrimm\PostDeployHook\Contracts\HandlesFailedHook;
+use MathiasGrimm\PostDeployHooks\Contracts\HandlesFailedHooks;
 use ReflectionClass;
 use ReflectionException;
 use RuntimeException;
 use Throwable;
 
-class PostDeployHook implements ShouldQueue
+class PostDeployHooks implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
@@ -34,15 +34,15 @@ class PostDeployHook implements ShouldQueue
         ?int $expires = null,
         public readonly array $arguments = [],
     ) {
-        $expires ??= config('post-deploy-hook.job.expire', 30);
-        $backoff = config('post-deploy-hook.job.backoff', 60);
+        $expires ??= config('post-deploy-hooks.job.expire', 30);
+        $backoff = config('post-deploy-hooks.job.backoff', 60);
 
         if (trim($version) === '' || trim($job) === '' || ! is_int($expires) || $expires < 1) {
             throw new InvalidArgumentException('A version, job class, and positive expiry in minutes are required.');
         }
 
         if (! is_int($backoff) || $backoff < 1) {
-            throw new InvalidArgumentException('post-deploy-hook.job.backoff must be a positive integer in seconds.');
+            throw new InvalidArgumentException('post-deploy-hooks.job.backoff must be a positive integer in seconds.');
         }
 
         foreach (array_keys($arguments) as $key) {
@@ -71,7 +71,7 @@ class PostDeployHook implements ShouldQueue
             return;
         }
 
-        if ($this->version !== config('post-deploy-hook.version')) {
+        if ($this->version !== config('post-deploy-hooks.version')) {
             $this->release($this->backoff);
 
             return;
@@ -113,7 +113,7 @@ class PostDeployHook implements ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
-        $handlerClass = config('post-deploy-hook.job.failure_handler');
+        $handlerClass = config('post-deploy-hooks.job.failure_handler');
 
         if ($handlerClass === null) {
             return;
@@ -121,13 +121,13 @@ class PostDeployHook implements ShouldQueue
 
         try {
             if (! is_string($handlerClass)) {
-                throw new InvalidArgumentException('post-deploy-hook.job.failure_handler must be a handler class name.');
+                throw new InvalidArgumentException('post-deploy-hooks.job.failure_handler must be a handler class name.');
             }
 
             $handler = app($handlerClass);
 
-            if (! $handler instanceof HandlesFailedHook) {
-                throw new InvalidArgumentException('The failure handler must implement '.HandlesFailedHook::class.'.');
+            if (! $handler instanceof HandlesFailedHooks) {
+                throw new InvalidArgumentException('The failure handler must implement '.HandlesFailedHooks::class.'.');
             }
 
             $handler->handle($this, $exception);

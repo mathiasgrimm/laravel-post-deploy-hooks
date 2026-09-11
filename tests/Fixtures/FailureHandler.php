@@ -1,16 +1,16 @@
 <?php
 
-namespace MathiasGrimm\PostDeployHook\Tests\Fixtures;
+namespace MathiasGrimm\PostDeployHooks\Tests\Fixtures;
 
-use MathiasGrimm\PostDeployHook\Contracts\HandlesFailedHook;
-use MathiasGrimm\PostDeployHook\Jobs\PostDeployHook;
+use MathiasGrimm\PostDeployHooks\Contracts\HandlesFailedHooks;
+use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
 use Throwable;
 
-class FailureHandler implements HandlesFailedHook
+class FailureHandler implements HandlesFailedHooks
 {
     public array $calls = [];
 
-    public function handle(PostDeployHook $hook, ?Throwable $exception): void
+    public function handle(PostDeployHooks $hook, ?Throwable $exception): void
     {
         $this->calls[] = [$hook, $exception];
     }

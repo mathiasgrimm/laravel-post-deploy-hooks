@@ -3,9 +3,9 @@
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Support\Facades\DB;
-use MathiasGrimm\PostDeployHook\Jobs\PostDeployHook;
-use MathiasGrimm\PostDeployHook\Tests\Fixtures\FailureHandler;
-use MathiasGrimm\PostDeployHook\Tests\Fixtures\GenerateSitemap;
+use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
+use MathiasGrimm\PostDeployHooks\Tests\Fixtures\FailureHandler;
+use MathiasGrimm\PostDeployHooks\Tests\Fixtures\GenerateSitemap;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
@@ -13,14 +13,14 @@ it('enqueues through the real console entry point with a fixed default deadline'
     $this->freezeSecond();
     $output = new BufferedOutput;
     $status = app(Kernel::class)->handle(new ArgvInput([
-        'artisan', 'post-deploy-hook', '--deploy-version=release-b', '--job='.GenerateSitemap::class,
+        'artisan', 'post-deploy-hooks', '--deploy-version=release-b', '--job='.GenerateSitemap::class,
     ]), $output);
 
     expect($status)->toBe(0);
     expect($output->fetch())->toContain('Post-deploy hook queued');
     $payload = json_decode(DB::table('jobs')->sole()->payload, true);
     $hook = unserialize($payload['data']['command']);
-    expect($hook)->toBeInstanceOf(PostDeployHook::class)
+    expect($hook)->toBeInstanceOf(PostDeployHooks::class)
         ->version->toBe('release-b')
         ->jobClass->toBe(GenerateSitemap::class)
         ->expires->toBe(30);
@@ -28,7 +28,7 @@ it('enqueues through the real console entry point with a fixed default deadline'
 });
 
 it('accepts a target that only exists in the upcoming release and routes the wrapper', function () {
-    $this->artisan('post-deploy-hook', [
+    $this->artisan('post-deploy-hooks', [
         '--deploy-version' => 'release-b', '--job' => 'App\\Jobs\\NewJob',
         '--expires' => '60', '--connection' => 'database', '--queue' => 'deployments',
     ])->assertSuccessful();
@@ -40,7 +40,7 @@ it('accepts a target that only exists in the upcoming release and routes the wra
 });
 
 it('rejects invalid command input without enqueueing', function (array $options) {
-    $this->artisan('post-deploy-hook', array_merge([
+    $this->artisan('post-deploy-hooks', array_merge([
         '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
     ], $options))->assertFailed();
     expect(DB::table('jobs')->count())->toBe(0);
@@ -53,7 +53,7 @@ it('rejects invalid command input without enqueueing', function (array $options)
 
 it('allows sync and immediately dispatches the target when the version matches', function () {
     config(['queue.connections.immediate' => ['driver' => 'sync']]);
-    $this->artisan('post-deploy-hook', [
+    $this->artisan('post-deploy-hooks', [
         '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
         '--connection' => 'immediate',
     ])->assertSuccessful();
@@ -66,10 +66,10 @@ it('cannot retry or expire a version mismatch on sync', function () {
     app()->instance(FailureHandler::class, $handler);
     config([
         'queue.connections.immediate' => ['driver' => 'sync'],
-        'post-deploy-hook.job.failure_handler' => FailureHandler::class,
-        'post-deploy-hook.version' => 'release-a',
+        'post-deploy-hooks.job.failure_handler' => FailureHandler::class,
+        'post-deploy-hooks.version' => 'release-a',
     ]);
-    $this->artisan('post-deploy-hook', [
+    $this->artisan('post-deploy-hooks', [
         '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
         '--connection' => 'immediate', '--expires' => 1,
     ])->assertSuccessful();
@@ -81,7 +81,7 @@ it('cannot retry or expire a version mismatch on sync', function () {
 
 it('allows the null driver', function () {
     config(['queue.connections.discard' => ['driver' => 'null']]);
-    $this->artisan('post-deploy-hook', [
+    $this->artisan('post-deploy-hooks', [
         '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
         '--connection' => 'discard',
     ])->assertSuccessful();
@@ -92,11 +92,11 @@ it('allows failover to a persistent connection', function () {
     config(['queue.connections.fallback' => [
         'driver' => 'failover', 'connections' => ['missing', 'database'],
     ]]);
-    $this->artisan('post-deploy-hook', [
+    $this->artisan('post-deploy-hooks', [
         '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
         '--connection' => 'fallback',
     ])->assertSuccessful();
-    expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(PostDeployHook::class);
+    expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(PostDeployHooks::class);
     $this->work();
     expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(GenerateSitemap::class);
 });
@@ -106,11 +106,11 @@ it('accepts a custom driver registered with Laravel', function () {
     config(['queue.connections.custom' => array_merge(config('queue.connections.database'), [
         'driver' => 'custom-database',
     ])]);
-    $this->artisan('post-deploy-hook', [
+    $this->artisan('post-deploy-hooks', [
         '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
         '--connection' => 'custom',
     ])->assertSuccessful();
-    expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(PostDeployHook::class);
+    expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(PostDeployHooks::class);
     $this->work();
     expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(GenerateSitemap::class);
 });

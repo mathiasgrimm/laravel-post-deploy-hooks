@@ -1,8 +1,8 @@
 <?php
 
-namespace MathiasGrimm\PostDeployHook\Commands;
+namespace MathiasGrimm\PostDeployHooks\Commands;
 
-final readonly class PostDeployHookOptions
+final readonly class PostDeployHooksOptions
 {
     /**
      * @param  array<string, string>  $arguments

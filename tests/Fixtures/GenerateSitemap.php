@@ -1,6 +1,6 @@
 <?php
 
-namespace MathiasGrimm\PostDeployHook\Tests\Fixtures;
+namespace MathiasGrimm\PostDeployHooks\Tests\Fixtures;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

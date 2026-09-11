@@ -1,5 +1,5 @@
 {
-    "name": "mathiasgrimm/laravel-post-deploy-hook",
+    "name": "mathiasgrimm/laravel-post-deploy-hooks",
     "description": "Queue deployment hooks until a Laravel worker is running the expected release.",
     "keywords": ["laravel", "laravel-cloud", "deployment", "queue", "post-deploy"],
     "type": "library",
@@ -14,11 +14,11 @@
         "orchestra/testbench": "^10.0 || ^11.0",
         "pestphp/pest": "^3.0 || ^4.0"
     },
-    "autoload": {"psr-4": {"MathiasGrimm\\PostDeployHook\\": "src/"}},
-    "autoload-dev": {"psr-4": {"MathiasGrimm\\PostDeployHook\\Tests\\": "tests/"}},
+    "autoload": {"psr-4": {"MathiasGrimm\\PostDeployHooks\\": "src/"}},
+    "autoload-dev": {"psr-4": {"MathiasGrimm\\PostDeployHooks\\Tests\\": "tests/"}},
     "extra": {
         "laravel": {
-            "providers": ["MathiasGrimm\\PostDeployHook\\PostDeployHookServiceProvider"]
+            "providers": ["MathiasGrimm\\PostDeployHooks\\PostDeployHooksServiceProvider"]
         }
     },
     "scripts": {

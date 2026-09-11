@@ -3,14 +3,14 @@
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
-use MathiasGrimm\PostDeployHook\Jobs\PostDeployHook;
-use MathiasGrimm\PostDeployHook\Tests\Fixtures\FailureHandler;
-use MathiasGrimm\PostDeployHook\Tests\Fixtures\GenerateSitemap;
+use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
+use MathiasGrimm\PostDeployHooks\Tests\Fixtures\FailureHandler;
+use MathiasGrimm\PostDeployHooks\Tests\Fixtures\GenerateSitemap;
 
 it('releases for sixty seconds and then dispatches on the matching release', function () {
     $this->freezeSecond();
-    config(['post-deploy-hook.version' => 'release-a']);
-    PostDeployHook::dispatch('release-b', GenerateSitemap::class);
+    config(['post-deploy-hooks.version' => 'release-a']);
+    PostDeployHooks::dispatch('release-b', GenerateSitemap::class);
     $deadline = now()->addMinutes(30)->timestamp;
 
     $this->work();
@@ -27,7 +27,7 @@ it('releases for sixty seconds and then dispatches on the matching release', fun
     expect(DB::table('jobs')->sole()->attempts)->toBe(2);
     expect($this->failures)->toBeEmpty();
 
-    config(['post-deploy-hook.version' => 'release-b']);
+    config(['post-deploy-hooks.version' => 'release-b']);
     $this->travel(60)->seconds();
     $this->work();
     $target = DB::table('jobs')->sole();
@@ -37,9 +37,9 @@ it('releases for sixty seconds and then dispatches on the matching release', fun
 });
 
 it('does not treat missing or loosely equal versions as a match', function ($current, string $expected) {
-    config(['post-deploy-hook.version' => $current]);
+    config(['post-deploy-hooks.version' => $current]);
     Queue::fake();
-    $hook = (new PostDeployHook($expected, GenerateSitemap::class))->withFakeQueueInteractions();
+    $hook = (new PostDeployHooks($expected, GenerateSitemap::class))->withFakeQueueInteractions();
     $hook->handle();
     $hook->assertReleased(60);
     Queue::assertNothingPushed();
@@ -47,7 +47,7 @@ it('does not treat missing or loosely equal versions as a match', function ($cur
 
 it('preserves the deadline across serialization and elapsed time', function () {
     $this->freezeSecond();
-    $hook = new PostDeployHook('release-b', GenerateSitemap::class);
+    $hook = new PostDeployHooks('release-b', GenerateSitemap::class);
     $deadline = $hook->retryUntil()->timestamp;
     $this->travel(29)->minutes();
     $restored = unserialize(serialize($hook));
@@ -56,9 +56,9 @@ it('preserves the deadline across serialization and elapsed time', function () {
 
 it('uses configured backoff for mismatch and captures it in the queue payload', function () {
     $this->freezeSecond();
-    config(['post-deploy-hook.job.backoff' => 15, 'post-deploy-hook.version' => 'release-a']);
-    PostDeployHook::dispatch('release-b', GenerateSitemap::class);
-    config(['post-deploy-hook.job.backoff' => 99]);
+    config(['post-deploy-hooks.job.backoff' => 15, 'post-deploy-hooks.version' => 'release-a']);
+    PostDeployHooks::dispatch('release-b', GenerateSitemap::class);
+    config(['post-deploy-hooks.job.backoff' => 99]);
     $this->work();
     $row = DB::table('jobs')->sole();
     expect($row->available_at)->toBe(now()->addSeconds(15)->timestamp);
@@ -69,8 +69,8 @@ it('fails at or after the deadline even if the version now matches and calls the
     $this->freezeSecond();
     $handler = new FailureHandler;
     app()->instance(FailureHandler::class, $handler);
-    config(['post-deploy-hook.job.failure_handler' => FailureHandler::class]);
-    PostDeployHook::dispatch('release-b', GenerateSitemap::class, 1);
+    config(['post-deploy-hooks.job.failure_handler' => FailureHandler::class]);
+    PostDeployHooks::dispatch('release-b', GenerateSitemap::class, 1);
 
     $this->travel($seconds)->seconds();
     $this->work();
@@ -83,15 +83,15 @@ it('fails at or after the deadline even if the version now matches and calls the
 })->with([60, 61, 3600]);
 
 it('does not resolve missing target classes on an old release', function () {
-    config(['post-deploy-hook.version' => 'release-a']);
-    PostDeployHook::dispatch('release-b', 'App\\Jobs\\NewJob');
+    config(['post-deploy-hooks.version' => 'release-a']);
+    PostDeployHooks::dispatch('release-b', 'App\\Jobs\\NewJob');
     $this->work();
     expect(DB::table('jobs')->count())->toBe(1);
     expect($this->failures)->toBeEmpty();
 });
 
 it('permanently fails invalid targets on a matching release', function (string $target) {
-    PostDeployHook::dispatch('release-b', $target);
+    PostDeployHooks::dispatch('release-b', $target);
     $this->work();
     expect(DB::table('jobs')->count())->toBe(0);
     expect($this->failures)->toHaveCount(1);

@@ -1,16 +1,16 @@
 <?php
 
-namespace MathiasGrimm\PostDeployHook\Commands;
+namespace MathiasGrimm\PostDeployHooks\Commands;
 
 use Illuminate\Console\Command;
 use InvalidArgumentException;
-use MathiasGrimm\PostDeployHook\Jobs\PostDeployHook;
+use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
 
-class PostDeployHookCommand extends Command
+class PostDeployHooksCommand extends Command
 {
     private const INVALID_OPTIONS_MESSAGE = 'Provide --deploy-version, --job, and a positive integer for --expires (minutes).';
 
-    protected $signature = 'post-deploy-hook
+    protected $signature = 'post-deploy-hooks
         {--deploy-version= : The release version to wait for}
         {--job= : The fully qualified application job class}
         {--expires= : Maximum waiting time in minutes (defaults to config)}
@@ -30,7 +30,7 @@ class PostDeployHookCommand extends Command
             return self::FAILURE;
         }
 
-        PostDeployHook::dispatch(
+        PostDeployHooks::dispatch(
             $options->version,
             $options->job,
             $options->expires,
@@ -44,12 +44,12 @@ class PostDeployHookCommand extends Command
         return self::SUCCESS;
     }
 
-    private function validatedOptions(): PostDeployHookOptions
+    private function validatedOptions(): PostDeployHooksOptions
     {
         $version = $this->option('deploy-version');
         $job = $this->option('job');
         $expires = $this->option('expires')
-            ?? config('post-deploy-hook.job.expire', 30);
+            ?? config('post-deploy-hooks.job.expire', 30);
 
         $this->ensureVersionIsValid($version);
         $this->ensureJobIsValid($job);
@@ -60,7 +60,7 @@ class PostDeployHookCommand extends Command
 
         $this->ensureQueueIsValid($queue);
 
-        return new PostDeployHookOptions(
+        return new PostDeployHooksOptions(
             version: $version,
             job: $job,
             expires: $expires,

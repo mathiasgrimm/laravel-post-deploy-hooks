@@ -1,8 +1,8 @@
 <p align="center">
-    <img src="art/banner.svg" alt="Laravel Post Deploy Hook" width="100%">
+    <img src="art/banner.svg" alt="Laravel Post Deploy Hooks" width="100%">
 </p>
 
-# Laravel Post Deploy Hook
+# Laravel Post Deploy Hooks
 
 > Queue deployment hooks until a worker is running the expected release.
 
@@ -13,11 +13,11 @@
 > respective owner.
 
 Deployment commands can finish before your new queue workers are ready.
-Laravel Post Deploy Hook queues a small wrapper that waits for the expected
+Laravel Post Deploy Hooks queues a small wrapper that waits for the expected
 version, then dispatches your application job through Laravel's normal bus.
 
 ```bash
-php artisan post-deploy-hook \
+php artisan post-deploy-hooks \
   --deploy-version="$LARAVEL_CLOUD_COMMIT_SHA" \
   --job='App\Jobs\GenerateSitemap' \
   --expires=60
@@ -52,14 +52,14 @@ driver if your retry window can exceed its capacity.
 ## Installation
 
 ```bash
-composer require mathiasgrimm/laravel-post-deploy-hook
+composer require mathiasgrimm/laravel-post-deploy-hooks
 ```
 
 The service provider and command are discovered automatically. Optionally publish
 the configuration:
 
 ```bash
-php artisan vendor:publish --tag=post-deploy-hook-config
+php artisan vendor:publish --tag=post-deploy-hooks-config
 ```
 
 Before first use, deploy the package to **all workers consuming the hook queue**
@@ -68,13 +68,13 @@ Install your failure handler in that initial deployment too.
 
 ## Set the release version
 
-Set `POST_DEPLOY_HOOK_VERSION` separately for each release. For Laravel
+Set `POST_DEPLOY_HOOKS_VERSION` separately for each release. For Laravel
 Cloud, add this to the release's build commands **before** `config:cache` or
 `optimize`:
 
 ```bash
 test -n "$LARAVEL_CLOUD_COMMIT_SHA" || exit 1
-echo "POST_DEPLOY_HOOK_VERSION=$LARAVEL_CLOUD_COMMIT_SHA" >> .env
+echo "POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT_SHA" >> .env
 php artisan config:cache
 ```
 
@@ -89,7 +89,7 @@ change the marker in a shared file so that old code reports the new version.
 Then enqueue the hook in your deploy commands using the same version:
 
 ```bash
-php artisan post-deploy-hook \
+php artisan post-deploy-hooks \
   --deploy-version="$LARAVEL_CLOUD_COMMIT_SHA" \
   --job='App\Jobs\GenerateSitemap'
 ```
@@ -105,8 +105,8 @@ their backslashes.
 
 ## How it works
 
-1. The command queues `MathiasGrimm\PostDeployHook\Jobs\PostDeployHook`.
-2. The wrapper compares the requested version with `config('post-deploy-hook.version')` using strict equality.
+1. The command queues `MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks`.
+2. The wrapper compares the requested version with `config('post-deploy-hooks.version')` using strict equality.
 3. A missing or different version releases the wrapper for the configured backoff, 60 seconds by default, and returns without constructing your job.
 4. A matching version dispatches your application job with its named arguments.
 5. The wrapper stops dispatching at its deadline, 30 minutes after enqueueing by default, and fails when a worker next processes it.
@@ -133,7 +133,7 @@ identifier if you need that distinction.
 Repeat `--with` to supply named constructor arguments:
 
 ```bash
-php artisan post-deploy-hook \
+php artisan post-deploy-hooks \
   --deploy-version="$LARAVEL_CLOUD_COMMIT_SHA" \
   --job='App\Jobs\GenerateSitemap' \
   --with='siteId=123' \
@@ -182,11 +182,11 @@ semantics. The wrapper's expiry does not limit the target's runtime or retries.
 
 ## Configuration
 
-`config/post-deploy-hook.php`:
+`config/post-deploy-hooks.php`:
 
 ```php
 return [
-    'version' => env('POST_DEPLOY_HOOK_VERSION'),
+    'version' => env('POST_DEPLOY_HOOKS_VERSION'),
     'job' => [
         'expire' => 30,  // Minutes.
         'backoff' => 60, // Seconds between attempts.
@@ -202,9 +202,9 @@ created; a later config change does not reset an existing wrapper's deadline.
 You can also dispatch a hook from PHP, with typed values in the arguments array:
 
 ```php
-use MathiasGrimm\PostDeployHook\Jobs\PostDeployHook;
+use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
 
-PostDeployHook::dispatch(
+PostDeployHooks::dispatch(
     version: $release,
     job: \App\Jobs\GenerateSitemap::class,
     arguments: ['siteId' => '123', 'locale' => 'en'],
@@ -216,7 +216,7 @@ dispatch has the same driver-dependent retry behavior as the CLI.
 
 ## Failure callback
 
-Set `job.failure_handler` to a class implementing `HandlesFailedHook`:
+Set `job.failure_handler` to a class implementing `HandlesFailedHooks`:
 
 ```php
 'job' => [
@@ -229,13 +229,13 @@ Set `job.failure_handler` to a class implementing `HandlesFailedHook`:
 ```php
 namespace App\Actions;
 
-use MathiasGrimm\PostDeployHook\Contracts\HandlesFailedHook;
-use MathiasGrimm\PostDeployHook\Jobs\PostDeployHook;
+use MathiasGrimm\PostDeployHooks\Contracts\HandlesFailedHooks;
+use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
 use Throwable;
 
-class ReportFailedDeploymentHook implements HandlesFailedHook
+class ReportFailedDeploymentHook implements HandlesFailedHooks
 {
-    public function handle(PostDeployHook $hook, ?Throwable $exception): void
+    public function handle(PostDeployHooks $hook, ?Throwable $exception): void
     {
         logger()->error('Post-deploy hook failed', [
             'version' => $hook->version,
@@ -264,7 +264,7 @@ original failure. Callback delivery is best effort and is not automatically
 retried; queue a separate idempotent notification job if you need retries.
 
 An expired wrapper retains its old deadline when retried with `queue:retry`.
-Run `post-deploy-hook` again to start a fresh waiting window.
+Run `post-deploy-hooks` again to start a fresh waiting window.
 
 ## Development
 

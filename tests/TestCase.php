@@ -1,12 +1,12 @@
 <?php
 
-namespace MathiasGrimm\PostDeployHook\Tests;
+namespace MathiasGrimm\PostDeployHooks\Tests;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\WorkerOptions;
 use Illuminate\Support\Facades\Schema;
-use MathiasGrimm\PostDeployHook\PostDeployHookServiceProvider;
+use MathiasGrimm\PostDeployHooks\PostDeployHooksServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
@@ -15,7 +15,7 @@ class TestCase extends Orchestra
 
     protected function getPackageProviders($app): array
     {
-        return [PostDeployHookServiceProvider::class];
+        return [PostDeployHooksServiceProvider::class];
     }
 
     protected function defineEnvironment($app): void
@@ -29,7 +29,7 @@ class TestCase extends Orchestra
             'driver' => 'database', 'connection' => 'testing', 'table' => 'jobs',
             'queue' => 'default', 'retry_after' => 90, 'after_commit' => false,
         ]);
-        $app['config']->set('post-deploy-hook.version', 'release-b');
+        $app['config']->set('post-deploy-hooks.version', 'release-b');
     }
 
     protected function setUp(): void

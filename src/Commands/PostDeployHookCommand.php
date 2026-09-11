@@ -3,10 +3,13 @@
 namespace MathiasGrimm\PostDeployHook\Commands;
 
 use Illuminate\Console\Command;
+use InvalidArgumentException;
 use MathiasGrimm\PostDeployHook\Jobs\PostDeployHook;
 
 class PostDeployHookCommand extends Command
 {
+    private const INVALID_OPTIONS_MESSAGE = 'Provide --deploy-version, --job, and a positive integer for --expires (minutes).';
+
     protected $signature = 'post-deploy-hook
         {--deploy-version= : The release version to wait for}
         {--job= : The fully qualified application job class}
@@ -19,9 +22,11 @@ class PostDeployHookCommand extends Command
 
     public function handle(): int
     {
-        $options = $this->validatedOptions();
+        try {
+            $options = $this->validatedOptions();
+        } catch (InvalidArgumentException $exception) {
+            $this->error($exception->getMessage());
 
-        if ($options === null) {
             return self::FAILURE;
         }
 
@@ -39,53 +44,70 @@ class PostDeployHookCommand extends Command
         return self::SUCCESS;
     }
 
-    private function validatedOptions(): ?PostDeployHookOptions
+    private function validatedOptions(): PostDeployHookOptions
     {
         $version = $this->option('deploy-version');
         $job = $this->option('job');
         $expires = $this->option('expires')
             ?? config('post-deploy-hook.job.expire', 30);
 
-        $expires = filter_var($expires, FILTER_VALIDATE_INT, [
-            'options' => ['min_range' => 1],
-        ]);
-
-        if (! is_string($version) || trim($version) === ''
-            || ! is_string($job) || trim($job) === '' || $expires === false) {
-            $this->error('Provide --deploy-version, --job, and a positive integer for --expires (minutes).');
-
-            return null;
-        }
+        $this->ensureVersionIsValid($version);
+        $this->ensureJobIsValid($job);
+        $expires = $this->ensureExpiresIsValid($expires);
 
         $connection = $this->option('connection') ?? config('queue.default');
         $queue = $this->option('queue');
 
-        if ($queue !== null && trim($queue) === '') {
-            $this->error('--queue must not be empty.');
-
-            return null;
-        }
-
-        $arguments = $this->parseJobArguments();
-
-        if ($arguments === null) {
-            return null;
-        }
+        $this->ensureQueueIsValid($queue);
 
         return new PostDeployHookOptions(
             version: $version,
             job: $job,
             expires: $expires,
-            arguments: $arguments,
+            arguments: $this->parseJobArguments(),
             connection: $connection,
             queue: $queue,
         );
     }
 
+    private function ensureVersionIsValid(mixed $version): void
+    {
+        if (! is_string($version) || trim($version) === '') {
+            throw new InvalidArgumentException(self::INVALID_OPTIONS_MESSAGE);
+        }
+    }
+
+    private function ensureJobIsValid(mixed $job): void
+    {
+        if (! is_string($job) || trim($job) === '') {
+            throw new InvalidArgumentException(self::INVALID_OPTIONS_MESSAGE);
+        }
+    }
+
+    private function ensureExpiresIsValid(mixed $expires): int
+    {
+        $expires = filter_var($expires, FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1],
+        ]);
+
+        if ($expires === false) {
+            throw new InvalidArgumentException(self::INVALID_OPTIONS_MESSAGE);
+        }
+
+        return $expires;
+    }
+
+    private function ensureQueueIsValid(?string $queue): void
+    {
+        if ($queue !== null && trim($queue) === '') {
+            throw new InvalidArgumentException('--queue must not be empty.');
+        }
+    }
+
     /**
-     * @return array<string, string>|null
+     * @return array<string, string>
      */
-    private function parseJobArguments(): ?array
+    private function parseJobArguments(): array
     {
         $arguments = [];
 
@@ -93,16 +115,22 @@ class PostDeployHookCommand extends Command
             $parts = explode('=', $pair, 2);
             $key = $parts[0];
 
-            if (count($parts) !== 2 || ! preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $key)
-                || array_key_exists($key, $arguments)) {
-                $this->error('Each --with must be key=value with a unique named argument key.');
-
-                return null;
-            }
+            $this->ensureJobArgumentIsValid($key, $parts[1] ?? null, $arguments);
 
             $arguments[$key] = $parts[1];
         }
 
         return $arguments;
+    }
+
+    /**
+     * @param  array<string, string>  $arguments
+     */
+    private function ensureJobArgumentIsValid(string $key, ?string $value, array $arguments): void
+    {
+        if ($value === null || ! preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $key)
+            || array_key_exists($key, $arguments)) {
+            throw new InvalidArgumentException('Each --with must be key=value with a unique named argument key.');
+        }
     }
 }

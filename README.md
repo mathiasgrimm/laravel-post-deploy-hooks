@@ -94,12 +94,11 @@ php artisan post-deploy-hooks \
 | `--deploy-version` | Yes | The version to wait for. |
 | `--job` | Yes | The job class to send to the queue. |
 | `--expires` | No | How many minutes the hook can wait, e.g. `60`. |
-| `--with` | No | A constructor argument, e.g. `'siteId=123'`. Repeat for more arguments. Values are strings. |
+| `--with` | No | Use when your job requires constructor arguments, e.g. `'siteId=123'`. Repeat for more arguments. Values are strings. |
 | `--connection` | No | Queue connection for the hook, e.g. `redis`. |
 | `--queue` | No | Queue name for the hook, e.g. `deployments`. |
 
-Use `--with` when your job requires constructor arguments. Names must match your
-job's constructor. For example, use
+Argument names must match your job's constructor. For example, use
 `--with='siteId=123' --with='locale=en'` for `__construct(string $siteId, string $locale)`.
 Numbers and booleans are passed as strings too. Missing required arguments,
 unknown names, and duplicate names are rejected. Your job class is checked only

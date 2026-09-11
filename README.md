@@ -90,7 +90,9 @@ php artisan post-deploy-hooks \
 ### Deployment timeline
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "system-ui, sans-serif", "fontSize": "14px", "actorBkg": "#dbeafe", "actorBorder": "#3b82f6", "actorTextColor": "#172033", "signalColor": "#64748b", "signalTextColor": "#172033", "noteBkgColor": "#e2e8f0", "noteBorderColor": "#64748b", "noteTextColor": "#172033", "activationBkgColor": "#dcfce7", "activationBorderColor": "#2d9d62"}}}%%
 sequenceDiagram
+    autonumber
     participant Cloud as Laravel Cloud
     participant Build as Build commands
     participant Deploy as Deploy commands
@@ -102,11 +104,19 @@ sequenceDiagram
     Cloud->>Build: Set version to v1.1.0 (def5678)
     Cloud->>Deploy: Run post-deploy-hooks
     Deploy->>Queue: Queue hook for v1.1.0 (def5678)
-    Queue->>Old: Try hook
-    Old-->>Queue: Version does not match, try again later
+    rect rgb(254, 226, 226)
+        Queue->>Old: Try hook
+        activate Old
+        Old-->>Queue: Version does not match, try again later
+        deactivate Old
+    end
     Cloud->>New: Deploy v1.1.0 (def5678)
-    Queue->>New: Try hook again
-    New->>Queue: Send GenerateSitemap
+    rect rgb(220, 252, 231)
+        Queue->>New: Try hook again
+        activate New
+        New->>Queue: Send GenerateSitemap
+        deactivate New
+    end
 ```
 
 The same deployment as a linear flow:

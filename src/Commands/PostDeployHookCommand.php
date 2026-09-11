@@ -19,6 +19,28 @@ class PostDeployHookCommand extends Command
 
     public function handle(): int
     {
+        $options = $this->validatedOptions();
+
+        if ($options === null) {
+            return self::FAILURE;
+        }
+
+        PostDeployHook::dispatch(
+            $options->version,
+            $options->job,
+            $options->expires,
+            $options->arguments,
+        )
+            ->onConnection($options->connection)
+            ->onQueue($options->queue);
+
+        $this->info("Post-deploy hook queued for version [{$options->version}]. Expires in {$options->expires} minutes.");
+
+        return self::SUCCESS;
+    }
+
+    private function validatedOptions(): ?PostDeployHookOptions
+    {
         $version = $this->option('deploy-version');
         $job = $this->option('job');
         $expires = $this->option('expires')
@@ -32,7 +54,7 @@ class PostDeployHookCommand extends Command
             || ! is_string($job) || trim($job) === '' || $expires === false) {
             $this->error('Provide --deploy-version, --job, and a positive integer for --expires (minutes).');
 
-            return self::FAILURE;
+            return null;
         }
 
         $connection = $this->option('connection') ?? config('queue.default');
@@ -41,9 +63,30 @@ class PostDeployHookCommand extends Command
         if ($queue !== null && trim($queue) === '') {
             $this->error('--queue must not be empty.');
 
-            return self::FAILURE;
+            return null;
         }
 
+        $arguments = $this->parseJobArguments();
+
+        if ($arguments === null) {
+            return null;
+        }
+
+        return new PostDeployHookOptions(
+            version: $version,
+            job: $job,
+            expires: $expires,
+            arguments: $arguments,
+            connection: $connection,
+            queue: $queue,
+        );
+    }
+
+    /**
+     * @return array<string, string>|null
+     */
+    private function parseJobArguments(): ?array
+    {
         $arguments = [];
 
         foreach ($this->option('with') as $pair) {
@@ -54,18 +97,12 @@ class PostDeployHookCommand extends Command
                 || array_key_exists($key, $arguments)) {
                 $this->error('Each --with must be key=value with a unique named argument key.');
 
-                return self::FAILURE;
+                return null;
             }
 
             $arguments[$key] = $parts[1];
         }
 
-        PostDeployHook::dispatch($version, $job, $expires, $arguments)
-            ->onConnection($connection)
-            ->onQueue($queue);
-
-        $this->info("Post-deploy hook queued for version [{$version}]. Expires in {$expires} minutes.");
-
-        return self::SUCCESS;
+        return $arguments;
     }
 }

@@ -45,7 +45,7 @@ the queue. Otherwise, it waits 60 seconds before trying again, for up to 30 minu
 
 ### Laravel Cloud
 
-Use `$LARAVEL_CLOUD_COMMIT_SHA` as the version.
+Use `$LARAVEL_CLOUD_COMMIT` as the version.
 
 **Build commands**
 
@@ -53,10 +53,10 @@ Add the version to the release's `.env` before caching config:
 
 ```bash
 # Stop if Laravel Cloud has not provided a commit SHA.
-test -n "$LARAVEL_CLOUD_COMMIT_SHA" || exit 1
+test -n "$LARAVEL_CLOUD_COMMIT" || exit 1
 
 # Add the version to this release's .env file.
-echo "POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT_SHA" >> .env
+echo "POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT" >> .env
 
 # Cache the config with the new version.
 php artisan config:cache
@@ -67,10 +67,10 @@ Use this in **Build commands** instead of the example above:
 
 ```bash
 # Stop if Laravel Cloud has not provided a commit SHA.
-test -n "$LARAVEL_CLOUD_COMMIT_SHA" || exit 1
+test -n "$LARAVEL_CLOUD_COMMIT" || exit 1
 
 # Replace the existing version in .env.
-sed -i "s/^POST_DEPLOY_HOOKS_VERSION=.*/POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT_SHA/" .env
+sed -i "s/^POST_DEPLOY_HOOKS_VERSION=.*/POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT/" .env
 
 # Cache the config with the new version.
 php artisan config:cache
@@ -86,7 +86,7 @@ After the build, queue the hook using the same version:
 ```bash
 # Queue the job to wait for a worker running this release.
 php artisan post-deploy-hooks \
-  --deploy-version="$LARAVEL_CLOUD_COMMIT_SHA" \
+  --deploy-version="$LARAVEL_CLOUD_COMMIT" \
   --job='App\Jobs\GenerateSitemap'
 ```
 

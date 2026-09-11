@@ -76,11 +76,12 @@ After the build, queue the hook using the same version:
 # Run database migrations...
 php artisan migrate --force
 
-# Queue jobs to wait for a worker running this release...
+# Queue the sitemap job for this release...
 php artisan post-deploy-hooks \
   --deploy-version="$LARAVEL_CLOUD_COMMIT" \
   --job='App\Jobs\GenerateSitemap'
 
+# Queue the Cloudflare cache job for this release...
 php artisan post-deploy-hooks \
   --deploy-version="$LARAVEL_CLOUD_COMMIT" \
   --job='App\Jobs\BustCloudflareCache'

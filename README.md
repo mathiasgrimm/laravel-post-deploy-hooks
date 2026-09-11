@@ -76,9 +76,6 @@ sed -i "s/^POST_DEPLOY_HOOKS_VERSION=.*/POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD
 php artisan config:cache
 ```
 
-Keep this setting separate for each release, and ensure an existing environment
-variable does not override it.
-
 **Deploy commands**
 
 After the build, queue the hook using the same version:

@@ -265,19 +265,6 @@ This handles hooks that expire or fail to send your job. Failures inside your
 job belong in its own `failed()` method. Errors in the handler are reported but
 not retried.
 
-## Things to know
-
-- The waiting limit never resets. An expired hook is marked as failed when a
-  worker next processes it.
-- Use the same queue system for the deploy command and workers. Any configured
-  connection is accepted, but waiting needs delayed retries. `sync` runs once
-  immediately; a version mismatch is not retried and cannot later expire.
-  `deferred` and `background` cannot wait reliably either; `null` discards the hook.
-- Older MySQL queue tables may allow only 255 attempts in `jobs.attempts`.
-  Increase that column's capacity if your waiting limit and retry delay need more.
-- Redeploying the same commit uses the same version. Use a unique release ID if
-  you need to distinguish those deployments.
-
 ## Development and releases
 
 ```bash

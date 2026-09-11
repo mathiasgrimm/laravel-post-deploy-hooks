@@ -59,7 +59,7 @@ Add the version to the release's `.env` before caching config:
 
 ```bash
 # Stop if Laravel Cloud has not provided a commit hash...
-test -n "$LARAVEL_CLOUD_COMMIT" || exit 1
+test -n "$LARAVEL_CLOUD_COMMIT" || { echo "Error: LARAVEL_CLOUD_COMMIT is not set." >&2; exit 1; }
 
 # Add the version to this release's .env file...
 echo "POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT" >> .env

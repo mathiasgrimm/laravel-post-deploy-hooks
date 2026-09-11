@@ -52,7 +52,7 @@ Use `$LARAVEL_CLOUD_COMMIT` as the version.
 Add the version to the release's `.env` before caching config:
 
 ```bash
-# Stop if Laravel Cloud has not provided a commit SHA.
+# Stop if Laravel Cloud has not provided a commit hash.
 test -n "$LARAVEL_CLOUD_COMMIT" || exit 1
 
 # Add the version to this release's .env file.
@@ -66,7 +66,7 @@ If the key already exists, replace its value instead of adding another line.
 Use this in **Build commands** instead of the example above:
 
 ```bash
-# Stop if Laravel Cloud has not provided a commit SHA.
+# Stop if Laravel Cloud has not provided a commit hash.
 test -n "$LARAVEL_CLOUD_COMMIT" || exit 1
 
 # Replace the existing version in .env.

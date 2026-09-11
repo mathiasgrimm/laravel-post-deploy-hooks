@@ -276,12 +276,24 @@ Run `post-deploy-hooks` again to start a fresh waiting window.
 
 ```bash
 composer install
-composer test
-composer lint:check
+make test
 ```
 
 Tests use Pest, Orchestra Testbench, and an in-memory SQLite queue. CI covers
 Laravel 12 and 13 with their supported PHP versions.
+
+## Releasing
+
+From a clean `main` branch that matches `origin/main`, run:
+
+```bash
+make release VERSION=v0.1.0
+```
+
+This installs dependencies, runs Pint and Pest, then creates the version tag and
+a GitHub release with generated notes. Use a new version in the form `vX.Y.Z`.
+The GitHub CLI (`gh`) must be installed and signed in. No build step is needed
+for this Composer package.
 
 ## Credits and license
 

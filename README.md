@@ -12,6 +12,7 @@ Requires PHP 8.3+ and Laravel 12+.
 ## Install
 
 ```bash
+# Install the package.
 composer require mathiasgrimm/laravel-post-deploy-hooks
 ```
 
@@ -24,6 +25,7 @@ Use a queue that supports delayed retries, such as Redis or the database queue.
 Set this environment variable before caching your config:
 
 ```dotenv
+# The version of this release.
 POST_DEPLOY_HOOKS_VERSION=release-123
 ```
 
@@ -32,6 +34,7 @@ POST_DEPLOY_HOOKS_VERSION=release-123
 Use the same version and a job that implements Laravel's `ShouldQueue`:
 
 ```bash
+# Send GenerateSitemap to the queue once a worker is running release-123.
 php artisan post-deploy-hooks \
   --deploy-version=release-123 \
   --job='App\Jobs\GenerateSitemap'
@@ -44,8 +47,13 @@ On Laravel Cloud, use `$LARAVEL_CLOUD_COMMIT_SHA` as the version. In your build
 commands, write it to the release's `.env` before caching config:
 
 ```bash
+# Stop if Laravel Cloud has not provided a commit SHA.
 test -n "$LARAVEL_CLOUD_COMMIT_SHA" || exit 1
+
+# Add the version to this release's .env file.
 echo "POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT_SHA" >> .env
+
+# Cache the config with the new version.
 php artisan config:cache
 ```
 
@@ -53,8 +61,13 @@ If the key already exists, replace its value instead of adding another line.
 On Laravel Cloud (Linux), use this instead of the append command above:
 
 ```bash
+# Stop if Laravel Cloud has not provided a commit SHA.
 test -n "$LARAVEL_CLOUD_COMMIT_SHA" || exit 1
+
+# Replace the existing version in .env.
 sed -i "s/^POST_DEPLOY_HOOKS_VERSION=.*/POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT_SHA/" .env
+
+# Cache the config with the new version.
 php artisan config:cache
 ```
 
@@ -84,6 +97,7 @@ on a worker running the matching version, so it can be new to that release.
 To change the defaults or add a failure handler, publish the config:
 
 ```bash
+# Copy the package settings into your app's config folder.
 php artisan vendor:publish --tag=post-deploy-hooks-config
 ```
 
@@ -95,7 +109,7 @@ In `config/post-deploy-hooks.php`:
     'queue' => null,      // The connection's default queue.
     'expire' => 30,       // Minutes to wait.
     'backoff' => 60,      // Seconds between attempts.
-    'failure_handler' => null,
+    'failure_handler' => null, // Optional class to handle hook failures.
 ],
 ```
 
@@ -107,10 +121,11 @@ whole numbers. Queue settings apply to the hook; your job keeps its own settings
 ```php
 use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
 
+// Wait for this release before sending the job to the queue.
 PostDeployHooks::dispatch(
     version: $release,
     job: \App\Jobs\GenerateSitemap::class,
-    expires: 60,
+    expires: 60, // Wait up to 60 minutes.
     arguments: ['siteId' => '123', 'locale' => 'en'],
 );
 ```
@@ -133,6 +148,7 @@ class ReportFailedHook implements HandlesFailedHooks
 {
     public function handle(PostDeployHooks $hook, ?Throwable $exception): void
     {
+        // Record which hook failed and why.
         logger()->error('Post-deploy hook failed', [
             'version' => $hook->version,
             'job' => $hook->jobClass,
@@ -168,7 +184,10 @@ not retried. Run the command again to start a new waiting period for an expired 
 ## Development and releases
 
 ```bash
+# Install development dependencies.
 composer install
+
+# Check formatting and run the tests.
 make test
 ```
 

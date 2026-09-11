@@ -130,8 +130,9 @@ In `config/post-deploy-hooks.php`:
 ],
 ```
 
-Command options override these defaults. `expire` and `backoff` must be positive
-integers. Queue settings apply to the hook; your job keeps its own settings.
+Command options override these defaults. `post-deploy-hooks.job.expire` and
+`post-deploy-hooks.job.backoff` must be positive integers. Queue settings apply
+to the hook; your job keeps its own settings.
 
 ## Run it programmatically
 
@@ -147,12 +148,12 @@ PostDeployHooks::dispatch(
 );
 ```
 
-Leave out `expires` to use the configured limit. Use `->onConnection()` and
+Leave out `expires` to use `post-deploy-hooks.job.expire`. Use `->onConnection()` and
 `->onQueue()` to override routing. PHP arguments keep the types you supply.
 
 ## Handle failures
 
-Set `job.failure_handler` to `App\Actions\ReportFailedHook::class` and create:
+Set `post-deploy-hooks.job.failure_handler` to `App\Actions\ReportFailedHook::class` and create:
 
 ```php
 namespace App\Actions;

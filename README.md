@@ -94,7 +94,7 @@ php artisan post-deploy-hooks \
 | `--deploy-version` | Yes | The version to wait for. |
 | `--job` | Yes | The job class to send to the queue. |
 | `--expires` | No | How many minutes the hook can wait, e.g. `60`. |
-| `--with` | Depends on your job | A constructor argument, e.g. `'siteId=123'`. Repeat for more arguments. Values are strings. |
+| `--with` | No | A constructor argument, e.g. `'siteId=123'`. Repeat for more arguments. Values are strings. |
 | `--connection` | No | Queue connection for the hook, e.g. `redis`. |
 | `--queue` | No | Queue name for the hook, e.g. `deployments`. |
 

@@ -15,7 +15,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Hook Settings
+    | Job Settings
     |--------------------------------------------------------------------------
     |
     | Settings for waiting for the right version and handling hook failures.

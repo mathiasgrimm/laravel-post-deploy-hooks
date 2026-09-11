@@ -111,7 +111,7 @@ on a worker running the matching version, so it can be new to that release.
 
 ## Configuration
 
-To change the defaults or add a failure handler, publish the config:
+To change the defaults, publish the config:
 
 ```bash
 # Copy the package settings into your app's config folder.

@@ -2,6 +2,13 @@
     <img src="art/banner.svg" alt="Laravel Post Deploy Hooks" width="100%">
 </p>
 
+<p align="center">
+    <a href="https://packagist.org/packages/mathiasgrimm/laravel-post-deploy-hooks"><img src="https://img.shields.io/packagist/v/mathiasgrimm/laravel-post-deploy-hooks.svg?style=flat-square" alt="Latest Version on Packagist"></a>
+    <a href="https://packagist.org/packages/mathiasgrimm/laravel-post-deploy-hooks"><img src="https://img.shields.io/packagist/dt/mathiasgrimm/laravel-post-deploy-hooks.svg?style=flat-square" alt="Total Downloads"></a>
+    <a href="https://github.com/mathiasgrimm/laravel-post-deploy-hooks/actions/workflows/tests.yml"><img src="https://github.com/mathiasgrimm/laravel-post-deploy-hooks/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+    <a href="https://packagist.org/packages/mathiasgrimm/laravel-post-deploy-hooks"><img src="https://img.shields.io/packagist/l/mathiasgrimm/laravel-post-deploy-hooks.svg?style=flat-square" alt="License"></a>
+</p>
+
 # Laravel Post Deploy Hooks
 
 > [!NOTE]

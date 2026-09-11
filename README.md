@@ -43,8 +43,13 @@ php artisan post-deploy-hooks \
 The hook checks the worker's version. If it matches, the hook sends your job to
 the queue. Otherwise, it waits 60 seconds before trying again, for up to 30 minutes.
 
-On Laravel Cloud, use `$LARAVEL_CLOUD_COMMIT_SHA` as the version. In your build
-commands, write it to the release's `.env` before caching config:
+### Laravel Cloud
+
+Use `$LARAVEL_CLOUD_COMMIT_SHA` as the version.
+
+**Build commands**
+
+Add the version to the release's `.env` before caching config:
 
 ```bash
 # Stop if Laravel Cloud has not provided a commit SHA.
@@ -55,15 +60,10 @@ echo "POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT_SHA" >> .env
 
 # Cache the config with the new version.
 php artisan config:cache
-
-# In your deploy commands, queue the job for this release.
-php artisan post-deploy-hooks \
-  --deploy-version="$LARAVEL_CLOUD_COMMIT_SHA" \
-  --job='App\Jobs\GenerateSitemap'
 ```
 
 If the key already exists, replace its value instead of adding another line.
-On Laravel Cloud (Linux), use this instead of the append command above:
+Use this in **Build commands** instead of the example above:
 
 ```bash
 # Stop if Laravel Cloud has not provided a commit SHA.
@@ -74,15 +74,21 @@ sed -i "s/^POST_DEPLOY_HOOKS_VERSION=.*/POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD
 
 # Cache the config with the new version.
 php artisan config:cache
-
-# In your deploy commands, queue the job for this release.
-php artisan post-deploy-hooks \
-  --deploy-version="$LARAVEL_CLOUD_COMMIT_SHA" \
-  --job='App\Jobs\GenerateSitemap'
 ```
 
 Keep this setting separate for each release, and ensure an existing environment
 variable does not override it.
+
+**Deploy commands**
+
+After the build, queue the hook using the same version:
+
+```bash
+# Queue the job to wait for a worker running this release.
+php artisan post-deploy-hooks \
+  --deploy-version="$LARAVEL_CLOUD_COMMIT_SHA" \
+  --job='App\Jobs\GenerateSitemap'
+```
 
 ## Options
 

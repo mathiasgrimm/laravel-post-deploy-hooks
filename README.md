@@ -7,7 +7,7 @@
 Run a queued job once a worker has loaded your new release. Useful for tasks
 such as generating a sitemap or refreshing cached data after deployment.
 
-Requires PHP 8.3+ and Laravel 12 or 13.
+Requires PHP 8.3+ and Laravel 12+.
 
 ## Install
 

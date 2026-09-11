@@ -81,10 +81,10 @@ php artisan post-deploy-hooks \
   --deploy-version="$LARAVEL_CLOUD_COMMIT" \
   --job='App\Jobs\GenerateSitemap'
 
-# Queue the Cloudflare cache job for this release...
+# Queue the job that clears the Cloudflare cache for this release...
 php artisan post-deploy-hooks \
   --deploy-version="$LARAVEL_CLOUD_COMMIT" \
-  --job='App\Jobs\BustCloudflareCache'
+  --job='App\Jobs\ClearCloudflareCache'
 ```
 
 ### Deployment timeline

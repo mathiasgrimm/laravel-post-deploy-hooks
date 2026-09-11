@@ -267,12 +267,6 @@ not retried.
 
 ## Things to know
 
-- The hook checks the worker's version. It does not check whether the whole
-  deployment is finished or the website is healthy.
-- Your job runs separately and may be picked up by another worker. It keeps its
-  own queue settings, retries, and failure handling.
-- Make your job safe to run more than once. Running the command twice or retrying
-  queue work can send it more than once.
 - The waiting limit never resets. An expired hook is marked as failed when a
   worker next processes it.
 - Use the same queue system for the deploy command and workers. Any configured

@@ -89,6 +89,8 @@ php artisan post-deploy-hooks \
 
 ### Deployment timeline
 
+The deployment as a sequence:
+
 ```mermaid
 sequenceDiagram
     autonumber

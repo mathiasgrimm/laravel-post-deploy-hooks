@@ -92,14 +92,16 @@ php artisan post-deploy-hooks \
 ```mermaid
 sequenceDiagram
     participant Cloud as Laravel Cloud
-    participant Build
+    participant Build as Build commands
+    participant Deploy as Deploy commands
     participant Queue
     participant Old as Worker on v1.0.0 (abc1234)
     participant New as Worker on v1.1.0 (def5678)
 
     Note over Cloud,Old: v1.0.0 (abc1234) is currently deployed
-    Cloud->>Build: Build v1.1.0 (def5678)
-    Cloud->>Queue: Queue hook for v1.1.0 (def5678)
+    Cloud->>Build: Set version to v1.1.0 (def5678)
+    Cloud->>Deploy: Run post-deploy-hooks
+    Deploy->>Queue: Queue hook for v1.1.0 (def5678)
     Queue->>Old: Try hook
     Old-->>Queue: Version does not match, try again later
     Cloud->>New: Deploy v1.1.0 (def5678)

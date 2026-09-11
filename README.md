@@ -15,9 +15,7 @@ Requires PHP 8.2+ with Laravel 12, or PHP 8.3+ with Laravel 13.
 composer require mathiasgrimm/laravel-post-deploy-hooks
 ```
 
-Before using the command, install the package on all workers that will process
-hooks and restart them. Use a queue that supports delayed retries, such as
-Redis or the database queue.
+Use a queue that supports delayed retries, such as Redis or the database queue.
 
 ## Quick start
 

@@ -55,6 +55,11 @@ echo "POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT_SHA" >> .env
 
 # Cache the config with the new version.
 php artisan config:cache
+
+# In your deploy commands, queue the job for this release.
+php artisan post-deploy-hooks \
+  --deploy-version="$LARAVEL_CLOUD_COMMIT_SHA" \
+  --job='App\Jobs\GenerateSitemap'
 ```
 
 If the key already exists, replace its value instead of adding another line.
@@ -69,11 +74,15 @@ sed -i "s/^POST_DEPLOY_HOOKS_VERSION=.*/POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD
 
 # Cache the config with the new version.
 php artisan config:cache
+
+# In your deploy commands, queue the job for this release.
+php artisan post-deploy-hooks \
+  --deploy-version="$LARAVEL_CLOUD_COMMIT_SHA" \
+  --job='App\Jobs\GenerateSitemap'
 ```
 
 Keep this setting separate for each release, and ensure an existing environment
-variable does not override it. In your deploy command, pass
-`--deploy-version="$LARAVEL_CLOUD_COMMIT_SHA"`.
+variable does not override it.
 
 ## Options
 

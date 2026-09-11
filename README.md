@@ -81,6 +81,9 @@ php artisan config:cache
 After the build, queue the hook using the same version:
 
 ```bash
+# Run database migrations...
+php artisan migrate --force
+
 # Queue the job to wait for a worker running this release...
 php artisan post-deploy-hooks \
   --deploy-version="$LARAVEL_CLOUD_COMMIT" \

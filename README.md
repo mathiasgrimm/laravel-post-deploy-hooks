@@ -117,7 +117,7 @@ sequenceDiagram
 ---
 title: Linear deployment flow
 ---
-%%{init: {"flowchart": {"curve": "basis", "padding": 24, "nodeSpacing": 32, "rankSpacing": 42}, "themeVariables": {"fontFamily": "system-ui, sans-serif", "fontSize": "14px", "lineColor": "#64748b", "edgeLabelBackground": "#ffffff"}}}%%
+%%{init: {"flowchart": {"curve": "basis", "padding": 24, "nodeSpacing": 32, "rankSpacing": 42}, "themeVariables": {"fontFamily": "system-ui, sans-serif", "fontSize": "14px", "lineColor": "#64748b", "edgeLabelBackground": "#1f2937"}}}%%
 flowchart TB
     A("1. Current release<br><b>v1.0.0</b> · abc1234"):::current
     B("2. Build commands<br>Set version to<br><b>v1.1.0</b> · def5678"):::action

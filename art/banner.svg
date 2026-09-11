@@ -33,5 +33,5 @@
   <path d="M314 224 l20 20 38 -44" stroke="url(#warm)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
   <text x="426" y="151" font-family="Helvetica, Arial, sans-serif" font-size="34" font-weight="600" fill="#F8FAFC">Laravel</text>
   <text x="423" y="217" font-family="Helvetica, Arial, sans-serif" font-size="58" font-weight="700" fill="url(#warm)">Post Deploy Hook</text>
-  <text x="426" y="265" font-family="Helvetica, Arial, sans-serif" font-size="24" fill="#94A3B8">Predictable post-deployment jobs</text>
+  <text x="426" y="265" font-family="Helvetica, Arial, sans-serif" font-size="24" fill="#94A3B8">Deterministic post-deployment jobs</text>
 </svg>

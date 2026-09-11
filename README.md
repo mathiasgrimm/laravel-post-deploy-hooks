@@ -87,6 +87,25 @@ php artisan post-deploy-hooks \
   --job='App\Jobs\GenerateSitemap'
 ```
 
+### Deployment timeline
+
+```mermaid
+sequenceDiagram
+    participant Cloud as Laravel Cloud
+    participant Queue
+    participant Old as Worker on abc1234
+    participant New as Worker on def5678
+
+    Note over Cloud,Old: abc1234 is currently deployed
+    Cloud->>Cloud: Build def5678
+    Cloud->>Queue: Queue hook for def5678
+    Queue->>Old: Try hook
+    Old-->>Queue: Version does not match, try again later
+    Cloud->>New: Deploy def5678
+    Queue->>New: Try hook again
+    New->>Queue: Send GenerateSitemap
+```
+
 ## Options
 
 | Option | Required | Purpose |

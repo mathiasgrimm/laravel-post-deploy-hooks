@@ -50,6 +50,14 @@ php artisan config:cache
 ```
 
 If the key already exists, replace its value instead of adding another line.
+On Laravel Cloud (Linux), use this instead of the append command above:
+
+```bash
+test -n "$LARAVEL_CLOUD_COMMIT_SHA" || exit 1
+sed -i "s/^POST_DEPLOY_HOOKS_VERSION=.*/POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT_SHA/" .env
+php artisan config:cache
+```
+
 Keep this setting separate for each release, and ensure an existing environment
 variable does not override it. In your deploy command, pass
 `--deploy-version="$LARAVEL_CLOUD_COMMIT_SHA"`.

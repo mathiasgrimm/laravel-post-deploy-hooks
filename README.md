@@ -27,9 +27,6 @@ Set this environment variable before caching your config:
 POST_DEPLOY_HOOKS_VERSION=release-123
 ```
 
-Each worker must keep the version of the code it is running. Restart workers
-when deploying new code.
-
 **2. Queue your job during deployment.**
 
 Use the same version and a job that implements Laravel's `ShouldQueue`:

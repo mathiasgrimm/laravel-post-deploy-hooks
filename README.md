@@ -68,20 +68,6 @@ echo "POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT" >> .env
 php artisan config:cache
 ```
 
-If the key already exists, replace its value instead of adding another line.
-Use this in **Build commands** instead of the example above:
-
-```bash
-# Stop if Laravel Cloud has not provided a commit hash...
-test -n "$LARAVEL_CLOUD_COMMIT" || exit 1
-
-# Replace the existing version in .env...
-sed -i "s/^POST_DEPLOY_HOOKS_VERSION=.*/POST_DEPLOY_HOOKS_VERSION=$LARAVEL_CLOUD_COMMIT/" .env
-
-# Cache the config with the new version...
-php artisan config:cache
-```
-
 **Deploy commands**
 
 After the build, queue the hook using the same version:

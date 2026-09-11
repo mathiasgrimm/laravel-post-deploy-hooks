@@ -4,6 +4,7 @@ use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Queue\Connectors\DatabaseConnector;
 use Illuminate\Support\Facades\DB;
 use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
+use MathiasGrimm\PostDeployHooks\Tests\Fixtures\CustomPostDeployHooks;
 use MathiasGrimm\PostDeployHooks\Tests\Fixtures\FailureHandler;
 use MathiasGrimm\PostDeployHooks\Tests\Fixtures\GenerateSitemap;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -114,3 +115,65 @@ it('accepts a custom driver registered with Laravel', function () {
     $this->work();
     expect(json_decode(DB::table('jobs')->sole()->payload, true)['displayName'])->toBe(GenerateSitemap::class);
 });
+
+it('uses configured routing unless explicitly overridden', function (bool $fromConsole, bool $override) {
+    config([
+        'queue.connections.hooks' => config('queue.connections.database'),
+        'post-deploy-hooks.job.connection' => 'hooks',
+        'post-deploy-hooks.job.queue' => 'configured-hooks',
+    ]);
+
+    if ($fromConsole) {
+        $this->artisan('post-deploy-hooks', array_merge([
+            '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
+        ], $override ? ['--connection' => 'database', '--queue' => 'explicit-hooks'] : []))
+            ->assertSuccessful();
+    } elseif ($override) {
+        PostDeployHooks::dispatch('release-b', GenerateSitemap::class)
+            ->onConnection('database')->onQueue('explicit-hooks');
+    } else {
+        PostDeployHooks::dispatch('release-b', GenerateSitemap::class);
+    }
+
+    $row = DB::table('jobs')->sole();
+    $hook = unserialize(json_decode($row->payload, true)['data']['command']);
+    expect($row->queue)->toBe($override ? 'explicit-hooks' : 'configured-hooks');
+    expect($hook->connection)->toBe($override ? 'database' : 'hooks');
+
+    $this->work($row->queue);
+    $target = DB::table('jobs')->sole();
+    expect($target->queue)->toBe('sitemaps');
+    expect(json_decode($target->payload, true)['displayName'])->toBe(GenerateSitemap::class);
+})->with([true, false])->with([true, false]);
+
+it('dispatches the configured hook class with its options and routing', function () {
+    config([
+        'post-deploy-hooks.job.class' => CustomPostDeployHooks::class,
+        'post-deploy-hooks.job.queue' => 'hooks',
+    ]);
+
+    $this->artisan('post-deploy-hooks', [
+        '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
+        '--expires' => '45', '--with' => ['siteId=123'],
+    ])->assertSuccessful();
+
+    $row = DB::table('jobs')->sole();
+    $hook = unserialize(json_decode($row->payload, true)['data']['command']);
+    expect($hook)->toBeInstanceOf(CustomPostDeployHooks::class)
+        ->version->toBe('release-b')
+        ->jobClass->toBe(GenerateSitemap::class)
+        ->expires->toBe(45)
+        ->arguments->toBe(['siteId' => '123']);
+    expect($row->queue)->toBe('hooks');
+});
+
+it('rejects an invalid configured hook class before enqueueing', function (mixed $class) {
+    config(['post-deploy-hooks.job.class' => $class]);
+
+    $this->artisan('post-deploy-hooks', [
+        '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
+    ])->expectsOutput('post-deploy-hooks.job.class must be PostDeployHooks or a class that extends it and can be created.')
+        ->assertFailed();
+
+    expect(DB::table('jobs')->count())->toBe(0);
+})->with([null, '', 'App\\Jobs\\MissingHook', stdClass::class, GenerateSitemap::class]);

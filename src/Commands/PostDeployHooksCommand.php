@@ -5,6 +5,7 @@ namespace MathiasGrimm\PostDeployHooks\Commands;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
+use ReflectionClass;
 
 class PostDeployHooksCommand extends Command
 {
@@ -15,8 +16,8 @@ class PostDeployHooksCommand extends Command
         {--job= : The fully qualified application job class}
         {--expires= : Maximum waiting time in minutes (defaults to config)}
         {--with=* : Named job argument as key=value; repeat for multiple arguments}
-        {--connection= : Queue connection for the wrapper}
-        {--queue= : Queue name for the wrapper}';
+        {--connection= : Queue connection for the wrapper (defaults to config)}
+        {--queue= : Queue name for the wrapper (defaults to config)}';
 
     protected $description = 'Queue a job once a worker is running the expected deployment version';
 
@@ -30,7 +31,7 @@ class PostDeployHooksCommand extends Command
             return self::FAILURE;
         }
 
-        PostDeployHooks::dispatch(
+        $options->hookClass::dispatch(
             $options->version,
             $options->job,
             $options->expires,
@@ -46,6 +47,9 @@ class PostDeployHooksCommand extends Command
 
     private function validatedOptions(): PostDeployHooksOptions
     {
+        $hookClass = config('post-deploy-hooks.job.class', PostDeployHooks::class);
+        $this->ensureHookClassIsValid($hookClass);
+
         $version = $this->option('deploy-version');
         $job = $this->option('job');
         $expires = $this->option('expires')
@@ -55,12 +59,15 @@ class PostDeployHooksCommand extends Command
         $this->ensureJobIsValid($job);
         $expires = $this->ensureExpiresIsValid($expires);
 
-        $connection = $this->option('connection') ?? config('queue.default');
-        $queue = $this->option('queue');
+        $connection = $this->option('connection')
+            ?? config('post-deploy-hooks.job.connection')
+            ?? config('queue.default');
+        $queue = $this->option('queue') ?? config('post-deploy-hooks.job.queue');
 
         $this->ensureQueueIsValid($queue);
 
         return new PostDeployHooksOptions(
+            hookClass: $hookClass,
             version: $version,
             job: $job,
             expires: $expires,
@@ -68,6 +75,14 @@ class PostDeployHooksCommand extends Command
             connection: $connection,
             queue: $queue,
         );
+    }
+
+    private function ensureHookClassIsValid(mixed $hookClass): void
+    {
+        if (! is_string($hookClass) || ! is_a($hookClass, PostDeployHooks::class, true)
+            || ! (new ReflectionClass($hookClass))->isInstantiable()) {
+            throw new InvalidArgumentException('post-deploy-hooks.job.class must be PostDeployHooks or a class that extends it and can be created.');
+        }
     }
 
     private function ensureVersionIsValid(mixed $version): void

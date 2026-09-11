@@ -1,5 +1,7 @@
 <?php
 
+use MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -23,6 +25,45 @@ return [
     */
 
     'job' => [
+        /*
+        |--------------------------------------------------------------------------
+        | Job Class
+        |--------------------------------------------------------------------------
+        |
+        | The hook job that waits for the right version before sending your job.
+        | To customize it, use a class that extends PostDeployHooks and keeps
+        | the same constructor arguments.
+        |
+        */
+
+        'class' => PostDeployHooks::class,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Queue Connection
+        |--------------------------------------------------------------------------
+        |
+        | The queue connection used to send the hook. Leave null to use Laravel's
+        | default connection. Use --connection to override it for a single hook.
+        | This does not change your application's job connection.
+        |
+        */
+
+        'connection' => null,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Queue Name
+        |--------------------------------------------------------------------------
+        |
+        | The queue where the hook waits. Leave null to use the connection's
+        | default queue. Use --queue to override it for a single hook.
+        | This does not change your application's job queue.
+        |
+        */
+
+        'queue' => null,
+
         /*
         |--------------------------------------------------------------------------
         | Expiry (Minutes)

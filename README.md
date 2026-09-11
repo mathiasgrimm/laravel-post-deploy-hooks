@@ -188,12 +188,25 @@ semantics. The wrapper's expiry does not limit the target's runtime or retries.
 return [
     'version' => env('POST_DEPLOY_HOOKS_VERSION'),
     'job' => [
+        'class' => \MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks::class,
+        'connection' => null, // Laravel's default connection.
+        'queue' => null,      // The connection's default queue.
         'expire' => 30,  // Minutes.
         'backoff' => 60, // Seconds between attempts.
         'failure_handler' => null,
     ],
 ];
 ```
+
+`job.class` is the hook job used by the command. To customize it, extend
+`MathiasGrimm\PostDeployHooks\Jobs\PostDeployHooks` and set this option to your
+class name. Keep the same constructor arguments. Install the custom class on the
+machine running the command and on all workers that process hooks. When dispatching
+from PHP, call your custom class directly.
+
+`job.connection` and `job.queue` route the wrapper only. Leave them `null` to use
+Laravel's defaults. The `--connection` and `--queue` options override these values
+for one hook. In PHP, use `->onConnection()` and `->onQueue()` to override them.
 
 `job.expire` and `job.backoff` must be positive integers. `--expires` overrides the
 configured expiry for one hook. Each wrapper captures these settings when it is

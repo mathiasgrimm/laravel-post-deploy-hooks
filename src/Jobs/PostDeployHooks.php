@@ -51,6 +51,9 @@ class PostDeployHooks implements ShouldQueue
             }
         }
 
+        $this->onConnection(config('post-deploy-hooks.job.connection'));
+        $this->onQueue(config('post-deploy-hooks.job.queue'));
+
         // InteractsWithQueue reserves $job for the underlying queue message.
         $this->jobClass = $job;
         $this->expires = $expires;

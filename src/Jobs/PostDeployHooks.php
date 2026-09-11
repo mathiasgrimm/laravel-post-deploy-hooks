@@ -37,19 +37,7 @@ class PostDeployHooks implements ShouldQueue
         $expires ??= config('post-deploy-hooks.job.expire');
         $backoff = config('post-deploy-hooks.job.backoff');
 
-        if (trim($version) === '' || trim($job) === '' || ! is_int($expires) || $expires < 1) {
-            throw new InvalidArgumentException('A version, job class, and positive expiry in minutes are required.');
-        }
-
-        if (! is_int($backoff) || $backoff < 1) {
-            throw new InvalidArgumentException('post-deploy-hooks.job.backoff must be a positive integer in seconds.');
-        }
-
-        foreach (array_keys($arguments) as $key) {
-            if (! is_string($key) || $key === '') {
-                throw new InvalidArgumentException('Job arguments must have non-empty string keys.');
-            }
-        }
+        $this->ensureHookOptionsAreValid($job, $expires, $backoff);
 
         $this->onConnection(config('post-deploy-hooks.job.connection'));
         $this->onQueue(config('post-deploy-hooks.job.queue'));
@@ -82,29 +70,7 @@ class PostDeployHooks implements ShouldQueue
 
         // Resolve only on the matching release, where newly deployed classes exist.
         try {
-            $class = new ReflectionClass($this->jobClass);
-
-            if (! $class->isInstantiable() || ! $class->implementsInterface(ShouldQueue::class)) {
-                throw new InvalidArgumentException("Job [{$this->jobClass}] must be instantiable and implement ShouldQueue.");
-            }
-
-            $parameters = $class->getConstructor()?->getParameters() ?? [];
-            $names = [];
-            $variadic = false;
-
-            foreach ($parameters as $parameter) {
-                $names[] = $parameter->getName();
-                $variadic = $variadic || $parameter->isVariadic();
-
-                if (! $parameter->isOptional() && ! $parameter->isVariadic()
-                    && ! array_key_exists($parameter->getName(), $this->arguments)) {
-                    throw new InvalidArgumentException("Missing job argument [{$parameter->getName()}].");
-                }
-            }
-
-            if (! $variadic && array_diff(array_keys($this->arguments), $names) !== []) {
-                throw new InvalidArgumentException("Unknown constructor arguments for job [{$this->jobClass}].");
-            }
+            $this->ensureTargetJobIsValid();
         } catch (ReflectionException|InvalidArgumentException $exception) {
             $this->fail($exception);
 
@@ -136,6 +102,60 @@ class PostDeployHooks implements ShouldQueue
             $handler->handle($this, $exception);
         } catch (Throwable $callbackException) {
             report($callbackException);
+        }
+    }
+
+    private function ensureHookOptionsAreValid(string $job, mixed $expires, mixed $backoff): void
+    {
+        if (trim($this->version) === '' || trim($job) === '' || ! is_int($expires) || $expires < 1) {
+            throw new InvalidArgumentException('A version, job class, and positive expiry in minutes are required.');
+        }
+
+        if (! is_int($backoff) || $backoff < 1) {
+            throw new InvalidArgumentException('post-deploy-hooks.job.backoff must be a positive integer in seconds.');
+        }
+
+        $this->ensureArgumentKeysAreValid();
+    }
+
+    private function ensureArgumentKeysAreValid(): void
+    {
+        foreach (array_keys($this->arguments) as $key) {
+            if (! is_string($key) || $key === '') {
+                throw new InvalidArgumentException('Job arguments must have non-empty string keys.');
+            }
+        }
+    }
+
+    private function ensureTargetJobIsValid(): void
+    {
+        $class = new ReflectionClass($this->jobClass);
+
+        if (! $class->isInstantiable() || ! $class->implementsInterface(ShouldQueue::class)) {
+            throw new InvalidArgumentException("Job [{$this->jobClass}] must be instantiable and implement ShouldQueue.");
+        }
+
+        $this->ensureTargetArgumentsAreValid($class);
+    }
+
+    private function ensureTargetArgumentsAreValid(ReflectionClass $class): void
+    {
+        $parameters = $class->getConstructor()?->getParameters() ?? [];
+        $names = [];
+        $variadic = false;
+
+        foreach ($parameters as $parameter) {
+            $names[] = $parameter->getName();
+            $variadic = $variadic || $parameter->isVariadic();
+
+            if (! $parameter->isOptional() && ! $parameter->isVariadic()
+                && ! array_key_exists($parameter->getName(), $this->arguments)) {
+                throw new InvalidArgumentException("Missing job argument [{$parameter->getName()}].");
+            }
+        }
+
+        if (! $variadic && array_diff(array_keys($this->arguments), $names) !== []) {
+            throw new InvalidArgumentException("Unknown constructor arguments for job [{$this->jobClass}].");
         }
     }
 }

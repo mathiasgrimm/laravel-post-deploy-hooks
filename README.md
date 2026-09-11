@@ -101,14 +101,23 @@ php artisan post-deploy-hooks \
 Argument names must match your job's constructor:
 
 ```php
+namespace App\Jobs;
+
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class GenerateSitemap implements ShouldQueue
 {
+    // ...
+
     public function __construct(
         public string $siteId,
         public string $locale,
     ) {}
+
+    public function handle(): void
+    {
+        // Generate the sitemap...
+    }
 }
 ```
 

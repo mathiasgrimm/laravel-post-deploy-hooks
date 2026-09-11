@@ -23,6 +23,10 @@ jobs:
             laravel: '^13.0'
             testbench: '^11.0'
             pest: '^4.0'
+          - php: '8.5'
+            laravel: '^13.0'
+            testbench: '^11.0'
+            pest: '^4.0'
     name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }}
     steps:
       - uses: actions/checkout@v4

@@ -131,7 +131,7 @@ In `config/post-deploy-hooks.php`:
 ```
 
 Command options override these defaults. `expire` and `backoff` must be positive
-whole numbers. Queue settings apply to the hook; your job keeps its own settings.
+integers. Queue settings apply to the hook; your job keeps its own settings.
 
 ## Run from PHP
 

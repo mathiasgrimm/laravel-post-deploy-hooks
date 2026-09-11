@@ -144,3 +144,23 @@ it('uses configured routing unless explicitly overridden', function (bool $fromC
     expect($target->queue)->toBe('sitemaps');
     expect(json_decode($target->payload, true)['displayName'])->toBe(GenerateSitemap::class);
 })->with([true, false])->with([true, false]);
+
+it('rejects missing configured expiry when no override is provided', function () {
+    $settings = config('post-deploy-hooks.job');
+    unset($settings['expire']);
+    config(['post-deploy-hooks.job' => $settings]);
+
+    $this->artisan('post-deploy-hooks', [
+        '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
+    ])->assertFailed();
+
+    expect(DB::table('jobs')->count())->toBe(0);
+
+    $this->artisan('post-deploy-hooks', [
+        '--deploy-version' => 'release-b', '--job' => GenerateSitemap::class,
+        '--expires' => '45',
+    ])->assertSuccessful();
+
+    $hook = unserialize(json_decode(DB::table('jobs')->sole()->payload, true)['data']['command']);
+    expect($hook->expires)->toBe(45);
+});

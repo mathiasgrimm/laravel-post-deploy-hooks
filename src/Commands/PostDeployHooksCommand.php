@@ -49,7 +49,7 @@ class PostDeployHooksCommand extends Command
         $version = $this->option('deploy-version');
         $job = $this->option('job');
         $expires = $this->option('expires')
-            ?? config('post-deploy-hooks.job.expire', 30);
+            ?? config('post-deploy-hooks.job.expire');
 
         $this->ensureVersionIsValid($version);
         $this->ensureJobIsValid($job);

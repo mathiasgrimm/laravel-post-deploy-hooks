@@ -34,8 +34,8 @@ class PostDeployHooks implements ShouldQueue
         ?int $expires = null,
         public readonly array $arguments = [],
     ) {
-        $expires ??= config('post-deploy-hooks.job.expire', 30);
-        $backoff = config('post-deploy-hooks.job.backoff', 60);
+        $expires ??= config('post-deploy-hooks.job.expire');
+        $backoff = config('post-deploy-hooks.job.backoff');
 
         if (trim($version) === '' || trim($job) === '' || ! is_int($expires) || $expires < 1) {
             throw new InvalidArgumentException('A version, job class, and positive expiry in minutes are required.');

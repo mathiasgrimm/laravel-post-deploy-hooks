@@ -101,3 +101,12 @@ class RequiresArguments implements ShouldQueue
 {
     public function __construct(string $value) {}
 }
+
+it('rejects missing required timing settings instead of supplying defaults', function (string $key) {
+    $settings = config('post-deploy-hooks.job');
+    unset($settings[$key]);
+    config(['post-deploy-hooks.job' => $settings]);
+
+    expect(fn () => new PostDeployHooks('release-b', GenerateSitemap::class))
+        ->toThrow(InvalidArgumentException::class);
+})->with(['expire', 'backoff']);

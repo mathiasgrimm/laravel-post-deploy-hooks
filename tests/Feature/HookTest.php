@@ -69,7 +69,7 @@ it('fails at or after the deadline even if the version now matches and calls the
     $this->freezeSecond();
     $handler = new FailureHandler;
     app()->instance(FailureHandler::class, $handler);
-    config(['post-deploy-hook.on_failure' => FailureHandler::class]);
+    config(['post-deploy-hook.job.failure_handler' => FailureHandler::class]);
     PostDeployHook::dispatch('release-b', GenerateSitemap::class, 1);
 
     $this->travel($seconds)->seconds();

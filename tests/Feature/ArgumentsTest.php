@@ -32,7 +32,7 @@ it('retains arguments through retries for the failure callback', function () {
     $this->freezeSecond();
     $handler = new FailureHandler;
     app()->instance(FailureHandler::class, $handler);
-    config(['post-deploy-hook.on_failure' => FailureHandler::class, 'post-deploy-hook.version' => 'release-a']);
+    config(['post-deploy-hook.job.failure_handler' => FailureHandler::class, 'post-deploy-hook.version' => 'release-a']);
     $arguments = ['siteId' => '123', 'locale' => 'en', 'token' => 'x', 'empty' => ''];
     PostDeployHook::dispatch('release-b', JobWithArguments::class, 1, $arguments);
     $this->work();

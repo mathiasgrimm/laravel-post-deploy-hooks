@@ -10,7 +10,7 @@ use MathiasGrimm\PostDeployHook\Tests\Fixtures\GenerateSitemap;
 it('calls the handler for permanent wrapper errors', function () {
     $handler = new FailureHandler;
     app()->instance(FailureHandler::class, $handler);
-    config(['post-deploy-hook.on_failure' => FailureHandler::class]);
+    config(['post-deploy-hook.job.failure_handler' => FailureHandler::class]);
     PostDeployHook::dispatch('release-b', 'App\\Jobs\\Missing');
     $this->work();
     expect($handler->calls)->toHaveCount(1);
@@ -22,7 +22,7 @@ it('reports callback exceptions while preserving the original job failure', func
     $handler = Mockery::mock(HandlesFailedHook::class);
     $handler->shouldReceive('handle')->once()->andThrow($callbackError);
     app()->instance('test.failure-handler', $handler);
-    config(['post-deploy-hook.on_failure' => 'test.failure-handler']);
+    config(['post-deploy-hook.job.failure_handler' => 'test.failure-handler']);
 
     $reporter = Mockery::mock(ExceptionHandler::class);
     $reporter->shouldReceive('report')->once()->with($callbackError);
@@ -39,7 +39,7 @@ it('retries dispatch errors until expiry and then calls the handler', function (
     $this->freezeSecond();
     $handler = new FailureHandler;
     app()->instance(FailureHandler::class, $handler);
-    config(['post-deploy-hook.on_failure' => FailureHandler::class]);
+    config(['post-deploy-hook.job.failure_handler' => FailureHandler::class]);
     PostDeployHook::dispatch('release-b', UnroutableJob::class, 1);
 
     $this->work();
@@ -55,7 +55,7 @@ it('retries dispatch errors until expiry and then calls the handler', function (
 it('does not call the wrapper callback for a target job failure', function () {
     $handler = new FailureHandler;
     app()->instance(FailureHandler::class, $handler);
-    config(['post-deploy-hook.on_failure' => FailureHandler::class]);
+    config(['post-deploy-hook.job.failure_handler' => FailureHandler::class]);
     FailingTarget::$failed = false;
     PostDeployHook::dispatch('release-b', FailingTarget::class);
     $this->work();

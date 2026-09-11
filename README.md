@@ -179,8 +179,8 @@ return [
     'job' => [
         'expire' => 30,  // Minutes.
         'backoff' => 60, // Seconds between attempts.
+        'failure_handler' => null,
     ],
-    'on_failure' => null,
 ];
 ```
 
@@ -206,10 +206,14 @@ does not run for direct dispatch.
 
 ## Failure callback
 
-Set `on_failure` to a class implementing `HandlesFailedHook`:
+Set `job.failure_handler` to a class implementing `HandlesFailedHook`:
 
 ```php
-'on_failure' => \App\Actions\ReportFailedDeploymentHook::class,
+'job' => [
+    'expire' => 30,
+    'backoff' => 60,
+    'failure_handler' => \App\Actions\ReportFailedDeploymentHook::class,
+],
 ```
 
 ```php

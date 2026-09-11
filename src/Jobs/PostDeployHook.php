@@ -113,7 +113,7 @@ class PostDeployHook implements ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
-        $handlerClass = config('post-deploy-hook.on_failure');
+        $handlerClass = config('post-deploy-hook.job.failure_handler');
 
         if ($handlerClass === null) {
             return;
@@ -121,7 +121,7 @@ class PostDeployHook implements ShouldQueue
 
         try {
             if (! is_string($handlerClass)) {
-                throw new InvalidArgumentException('post-deploy-hook.on_failure must be a handler class name.');
+                throw new InvalidArgumentException('post-deploy-hook.job.failure_handler must be a handler class name.');
             }
 
             $handler = app($handlerClass);

@@ -6,8 +6,8 @@ return [
     'job' => [
         'expire' => 30,
         'backoff' => 60,
-    ],
 
-    // A class implementing Contracts\HandlesFailedHook, resolved from the container.
-    'on_failure' => null,
+        // A class implementing Contracts\HandlesFailedHook, resolved from the container.
+        'failure_handler' => null,
+    ],
 ];

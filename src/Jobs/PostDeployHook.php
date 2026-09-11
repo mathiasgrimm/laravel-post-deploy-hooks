@@ -1,0 +1,138 @@
+<?php
+
+namespace MathiasGrimm\PostDeployHook\Jobs;
+
+use Carbon\CarbonImmutable;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use InvalidArgumentException;
+use MathiasGrimm\PostDeployHook\Contracts\HandlesFailedHook;
+use ReflectionClass;
+use ReflectionException;
+use RuntimeException;
+use Throwable;
+
+class PostDeployHook implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable;
+
+    public readonly string $jobClass;
+
+    public readonly CarbonImmutable $expiresAt;
+
+    public readonly int $expires;
+
+    public int $backoff;
+
+    public int $tries = 0;
+
+    public function __construct(
+        public readonly string $version,
+        string $job,
+        ?int $expires = null,
+        public readonly array $arguments = [],
+    ) {
+        $expires ??= config('post-deploy-hook.expires', 30);
+        $backoff = config('post-deploy-hook.backoff', 60);
+
+        if (trim($version) === '' || trim($job) === '' || ! is_int($expires) || $expires < 1) {
+            throw new InvalidArgumentException('A version, job class, and positive expiry in minutes are required.');
+        }
+
+        if (! is_int($backoff) || $backoff < 1) {
+            throw new InvalidArgumentException('post-deploy-hook.backoff must be a positive integer in seconds.');
+        }
+
+        foreach (array_keys($arguments) as $key) {
+            if (! is_string($key) || $key === '') {
+                throw new InvalidArgumentException('Job arguments must have non-empty string keys.');
+            }
+        }
+
+        // InteractsWithQueue reserves $job for the underlying queue message.
+        $this->jobClass = $job;
+        $this->expires = $expires;
+        $this->backoff = $backoff;
+        $this->expiresAt = CarbonImmutable::now()->addMinutes($expires);
+    }
+
+    public function retryUntil(): CarbonImmutable
+    {
+        return $this->expiresAt;
+    }
+
+    public function handle(): void
+    {
+        if (CarbonImmutable::now()->greaterThanOrEqualTo($this->expiresAt)) {
+            $this->fail(new RuntimeException("Post-deploy hook for version [{$this->version}] expired."));
+
+            return;
+        }
+
+        if ($this->version !== config('post-deploy-hook.version')) {
+            $this->release($this->backoff);
+
+            return;
+        }
+
+        // Resolve only on the matching release, where newly deployed classes exist.
+        try {
+            $class = new ReflectionClass($this->jobClass);
+
+            if (! $class->isInstantiable() || ! $class->implementsInterface(ShouldQueue::class)) {
+                throw new InvalidArgumentException("Job [{$this->jobClass}] must be instantiable and implement ShouldQueue.");
+            }
+
+            $parameters = $class->getConstructor()?->getParameters() ?? [];
+            $names = [];
+            $variadic = false;
+
+            foreach ($parameters as $parameter) {
+                $names[] = $parameter->getName();
+                $variadic = $variadic || $parameter->isVariadic();
+
+                if (! $parameter->isOptional() && ! $parameter->isVariadic()
+                    && ! array_key_exists($parameter->getName(), $this->arguments)) {
+                    throw new InvalidArgumentException("Missing job argument [{$parameter->getName()}].");
+                }
+            }
+
+            if (! $variadic && array_diff(array_keys($this->arguments), $names) !== []) {
+                throw new InvalidArgumentException("Unknown constructor arguments for job [{$this->jobClass}].");
+            }
+        } catch (ReflectionException|InvalidArgumentException $exception) {
+            $this->fail($exception);
+
+            return;
+        }
+
+        dispatch(new $this->jobClass(...$this->arguments));
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        $handlerClass = config('post-deploy-hook.on_failure');
+
+        if ($handlerClass === null) {
+            return;
+        }
+
+        try {
+            if (! is_string($handlerClass)) {
+                throw new InvalidArgumentException('post-deploy-hook.on_failure must be a handler class name.');
+            }
+
+            $handler = app($handlerClass);
+
+            if (! $handler instanceof HandlesFailedHook) {
+                throw new InvalidArgumentException('The failure handler must implement '.HandlesFailedHook::class.'.');
+            }
+
+            $handler->handle($this, $exception);
+        } catch (Throwable $callbackException) {
+            report($callbackException);
+        }
+    }
+}

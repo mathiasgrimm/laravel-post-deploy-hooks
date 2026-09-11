@@ -122,8 +122,8 @@ sequenceDiagram
 The same deployment as a linear flow:
 
 ```mermaid
-%%{init: {"flowchart": {"curve": "basis", "diagramPadding": 24, "padding": 18, "nodeSpacing": 28, "rankSpacing": 36}, "themeVariables": {"fontFamily": "system-ui, sans-serif", "fontSize": "14px", "lineColor": "#64748b", "edgeLabelBackground": "#ffffff"}}}%%
-flowchart LR
+%%{init: {"flowchart": {"curve": "basis", "padding": 24, "nodeSpacing": 32, "rankSpacing": 42}, "themeVariables": {"fontFamily": "system-ui, sans-serif", "fontSize": "14px", "lineColor": "#64748b", "edgeLabelBackground": "#ffffff"}}}%%
+flowchart TB
     A("1. Current release<br><b>v1.0.0</b> · abc1234"):::current
     B("2. Build commands<br>Set version to<br><b>v1.1.0</b> · def5678"):::action
     C("3. Deploy commands<br>Queue hook for<br><b>v1.1.0</b> · def5678"):::action

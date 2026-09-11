@@ -76,10 +76,14 @@ After the build, queue the hook using the same version:
 # Run database migrations...
 php artisan migrate --force
 
-# Queue the job to wait for a worker running this release...
+# Queue jobs to wait for a worker running this release...
 php artisan post-deploy-hooks \
   --deploy-version="$LARAVEL_CLOUD_COMMIT" \
   --job='App\Jobs\GenerateSitemap'
+
+php artisan post-deploy-hooks \
+  --deploy-version="$LARAVEL_CLOUD_COMMIT" \
+  --job='App\Jobs\WarmCache'
 ```
 
 ### Deployment timeline

@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="art/banner.svg" alt="Laravel Post Deploy Hooks" width="100%">
+    <img src="art/banner.avif" alt="Laravel Post Deploy Hooks" width="100%">
 </p>
 
 <p align="center">
